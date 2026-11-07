@@ -1,28 +1,30 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
-import PlcOneView from './components/plcs/PlcOneView';
-import PlcTwoView from './components/plcs/PlcTwoView';
-import PlcThreeView from './components/plcs/PlcThreeView';
-import Graficos from './pages/Graficos';
+import { MonitorProvider } from './context/MonitorContext';
+import Dashboard from './pages/Dashboard';
+import EtiquetaDigital from './pages/EtiquetaDigital';
+import Historial from './pages/Historial';
+import Login from './pages/Login';
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Ruta pública */}
-        <Route path="/" element={<Login />} />
+      <MonitorProvider>
+        <Routes>
+          {/* Acceso (opcional) */}
+          <Route path="/login" element={<Login />} />
 
-        {/* Rutas privadas (con menú) */}
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/graficos" element={<Graficos />} />
-          <Route path="/plcOneView" element={<PlcOneView />} />
-          <Route path="/plcTwoView" element={<PlcTwoView />} />
-          <Route path="/plcThreeView" element={<PlcThreeView />} />
-        </Route>
-      </Routes>
+          {/* Monitor con menú de salas */}
+          <Route element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="historial" element={<Historial />} />
+            <Route path="lotes/:id" element={<EtiquetaDigital />} />
+            <Route path="dashboard" element={<Navigate to="/" replace />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </MonitorProvider>
     </BrowserRouter>
   );
 }

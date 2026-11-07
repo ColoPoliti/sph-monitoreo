@@ -5,7 +5,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Opcional: Establecer Montserrat como la fuente por defecto para todo el cuerpo */
-body {
-  font-family: 'Montserrat', sans-serif;
+@layer base {
+  /* Barras de scroll y controles nativos acordes al tema elegido */
+  html {
+    @apply [color-scheme:light];
+  }
+
+  html.dark {
+    @apply [color-scheme:dark];
+  }
+
+  body {
+    @apply bg-white text-gray-900 dark:bg-slate-950 dark:text-white;
+  }
+
+  :focus-visible {
+    @apply outline outline-[3px] outline-offset-2 outline-violet-600 dark:outline-violet-400;
+  }
 }

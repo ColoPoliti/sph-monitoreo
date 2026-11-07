@@ -1,36 +1,56 @@
-// src/components/Layout.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import Navbar from './Navbar';
-import MobileBottomNav from './MobileBottomNav';
+import StatusBar from './StatusBar';
+import TopBar from './TopBar';
+import { useTituloVista } from '../lib/useTituloVista';
 
 export default function Layout() {
-  const [expanded, setExpanded] = useState(false);
+  const { titulo } = useTituloVista();
+  const [menuOpen, setMenuOpen] = useState(
+    () => typeof window === 'undefined' || window.innerWidth >= 1024,
+  );
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
-    <div className="h-screen bg-slate-100 dark:bg-gray-950 dark:text-white flex flex-col">
-      {/* Navbar arriba */}
-      <div className="w-full h-16 z-20">
-        <Navbar />
-      </div>
+    <div className="flex h-screen flex-col overflow-hidden bg-white dark:bg-slate-950 text-gray-900 dark:text-white">
+      <TopBar menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((v) => !v)} />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar: Solo visible en PC (md) */}
-        {/* <div className="hidden md:block">
-          <Sidebar expanded={expanded} setExpanded={setExpanded} />
-        </div> */}
+      <div className="relative flex min-h-0 flex-1">
+        {menuOpen && (
+          <button
+            type="button"
+            aria-label="Cerrar menú de salas"
+            onClick={() => setMenuOpen(false)}
+            className="fixed inset-0 top-[72px] z-20 cursor-default bg-black/40 lg:hidden"
+          />
+        )}
 
-        {/* Contenido Principal */}
-        <main className={`flex-1 lg:overflow-hidden overflow-y-auto transition-all duration-300 pb-16  md:pb-0 ${expanded ? 'md:ml-64' : 'md:ml-16'}`}>
+        <Sidebar
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          onToggle={() => setMenuOpen((v) => !v)}
+        />
+
+        <main className="h-full min-w-0 flex-1 overflow-y-auto bg-slate-200 p-4 dark:bg-slate-950">
+          {/* Mobile: nombre de la vista/sala en un badge arriba del contenido (en el TopBar se oculta para centrar el logo) */}
+          <div className="mb-3 flex sm:hidden">
+            <span className="inline-flex min-w-0 items-center rounded-full border border-gray-300 bg-white px-3 py-1.5 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+              <span className="truncate text-[13px] font-extrabold leading-tight">{titulo}</span>
+            </span>
+          </div>
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Bottom Nav: Solo visible en celular (md:hidden) */}
-      {/* <div className="md:hidden">
-        <MobileBottomNav />
-      </div> */}
+      <StatusBar />
     </div>
   );
 }

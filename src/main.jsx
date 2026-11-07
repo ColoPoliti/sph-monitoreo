@@ -1,9 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '@trendmicro/react-sidenav/dist/react-sidenav.css'; // Primero la librería
-import './index.css'; // DESPUÉS tu CSS (esto le da prioridad a tu archivo)
+import './index.css'
 import App from './App.jsx'
-import { ThemeProvider } from './context/ThemeContext'; 
+import { ThemeProvider } from './context/ThemeContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

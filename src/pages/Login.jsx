@@ -4,21 +4,22 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    // Acá después validarás usuario y pass, ahora solo simulamos:
-    navigate('/dashboard');
+    // Acá después se valida usuario y contraseña; por ahora solo ingresa.
+    navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-  <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl w-96">
-    <h1 className="text-2xl font-bold text-white mb-6">Acceso SPH</h1>
-        <button 
+    <main className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950 px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 p-8 shadow-md dark:shadow-none">
+        <h1 className="mb-6 text-2xl font-extrabold text-gray-900 dark:text-white">Acceso SPH</h1>
+        <button
+          type="button"
           onClick={handleLogin}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          className="w-full cursor-pointer rounded-lg bg-violet-700 dark:bg-violet-300 py-2.5 font-bold text-white dark:text-gray-900 transition-opacity hover:opacity-90"
         >
-          Entrar al Dashboard
+          Entrar al monitor
         </button>
       </div>
-    </div>
+    </main>
   );
 }
