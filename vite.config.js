@@ -6,9 +6,9 @@ import react from '@vitejs/plugin-react'
 // En producción se puede sobrescribir con VITE_API_BASE.
 const apiProxy = {
   '/api': {
-    target: 'https://api.marcospoliti.ar',
+    target: 'http://10.200.1.243:8080',
     changeOrigin: true,
-    secure: true,
+    secure: false,
     rewrite: (path) => path.replace(/^\/api/, ''),
   },
 }
