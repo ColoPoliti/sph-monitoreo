@@ -1,8 +1,10 @@
 import { CONFIG } from '../config/monitor';
 
-// El PLC publica etapa 0 con todo en cero cuando está parado.
-export const enEspera = (s) =>
-  !s || s.etapa === null || s.etapa === 7 || (s.etapa === 0 && s.sp === 0 && s.estado === 0);
+// El PLC publica etapa 0 con todo en cero cuando está parado, o etapa 7 (en espera).
+export const esEspera = (etapa, sp, estado) =>
+  etapa === null || etapa === 7 || (etapa === 0 && sp === 0 && estado === 0);
+
+export const enEspera = (s) => !s || esEspera(s.etapa, s.sp, s.estado);
 
 export const enLinea = (s, now = Date.now()) =>
   !!s && s.lastRx > 0 && now - s.lastRx <= CONFIG.SEGUNDOS_SIN_CONEXION * 1000;

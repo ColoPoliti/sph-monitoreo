@@ -4,10 +4,10 @@
 
 export const CONFIG = {
   // MQTT por WebSocket. En producción: wss://servidor/mqtt
-  MQTT_URL: import.meta.env.VITE_MQTT_URL || 'wss://mqtt.marcospoliti.ar',
+  MQTT_URL: import.meta.env.VITE_MQTT_URL || 'ws://10.200.1.243:9001',
   MQTT_USER: import.meta.env.VITE_MQTT_USER || 'web_lectura',
   MQTT_PASS: import.meta.env.VITE_MQTT_PASS || 'admin.sph',
-  BROKER_ETIQUETA: import.meta.env.VITE_BROKER_ETIQUETA || 'mqtt.marcospoliti.ar',
+  BROKER_ETIQUETA: import.meta.env.VITE_BROKER_ETIQUETA || '10.200.1.243',
 
   // API PHP (lotes.php). En desarrollo /api lo redirige el proxy de Vite.
   // En producción: definir VITE_API_BASE con la URL pública de la API.

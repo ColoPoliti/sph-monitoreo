@@ -24,3 +24,9 @@ export const fechaCorta = (ts) => {
 
 export const hoyISO = (offsetDias = 0) =>
   new Date(Date.now() + offsetDias * 864e5).toLocaleDateString('sv-SE');
+
+// Código de materia prima con un solo prefijo "MP": 'MP-101', 'MP 101' o '101' -> 'MP 101'
+export const codigoMP = (c) => {
+  const limpio = String(c ?? '').trim().replace(/^(MP[\s-]*)+/i, '');
+  return 'MP ' + (limpio || '-');
+};

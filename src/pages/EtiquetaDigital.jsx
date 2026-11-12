@@ -5,7 +5,7 @@ import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Chip, ChipEstado, labelClass, subClass } from '../components/ui';
 import { CONFIG, areaDe } from '../config/monitor';
 import { getLote } from '../lib/api';
-import { fechaCorta, fmt, mmss, num, signo } from '../lib/format';
+import { codigoMP, fechaCorta, fmt, mmss, num, signo } from '../lib/format';
 
 const CARD = 'rounded-[14px] bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
 const TH =
@@ -163,7 +163,7 @@ export default function EtiquetaDigital() {
                             <>
                               <br />
                               <span className="text-[13px] text-gray-500 dark:text-slate-400">
-                                MP {e.codigo_mp}
+                                {codigoMP(e.codigo_mp)}
                               </span>
                             </>
                           )}

@@ -8,7 +8,7 @@ import { Chip, ProgressPill, labelClass, subClass } from '../components/ui';
 import { CONFIG } from '../config/monitor';
 import { useMonitor } from '../context/MonitorContext';
 import { getUltimas } from '../lib/api';
-import { clamp, fmt, mmss, num } from '../lib/format';
+import { clamp, codigoMP, fmt, mmss, num } from '../lib/format';
 import { enEspera, enLinea, nombreEtapa, unidadEtapa } from '../lib/rooms';
 
 const CARD = 'rounded-[14px] bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
@@ -58,9 +58,11 @@ export default function Dashboard() {
     return <p className="text-gray-500 dark:text-slate-400">Cargando salas…</p>;
   }
 
-  const r = s.receta;
   const on = enLinea(s, now);
   const espera = enEspera(s);
+  // En espera no se muestra la receta (el PLC sigue mandando la del lote anterior)
+  const lote = s.receta; // datos del lote: se muestran siempre
+  const r = on && espera ? null : lote; // tabla de insumos: oculta en espera
   const activo = on && !espera;
 
   let etapaTxt = 'Sin datos';
@@ -109,18 +111,18 @@ export default function Dashboard() {
       <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-6`}>
         <div className="flex min-w-0 flex-col gap-1.5">
           <h1 className="m-0 sm:text-4xl font-extrabold leading-[1.15] [overflow-wrap:anywhere] text-xl">
-            {r ? String(r.producto?.nombre || '').toUpperCase() : 'SIN LOTE'}
+            {lote ? String(lote.producto?.nombre || '').toUpperCase() : 'SIN LOTE'}
           </h1>
           <span className={subClass}>
-            {r
-              ? `SKU ${r.producto?.sku || '-'}  ·  Tolva ${r.tolva ?? '-'}`
+            {lote
+              ? `SKU ${lote.producto?.sku || '-'}  ·  Tolva ${lote.tolva ?? '-'}`
               : 'SKU -  ·  Tolva -'}
           </span>
         </div>
         <div className="flex flex-col gap-1.5 border-t border-gray-200 pt-3 dark:border-slate-800 lg:items-end lg:border-0 lg:pt-0">
           <span className={labelClass}>Código de barras</span>
           <span className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300 sm:text-[28px]">
-            {r ? r.codigo_barra : '-'}
+            {lote ? lote.codigo_barra : '-'}
           </span>
         </div>
       </section>
@@ -281,7 +283,7 @@ export default function Dashboard() {
                               {String(ins.nombre || '').toUpperCase()}
                               <br />
                               <span className="text-[13px] text-gray-500 dark:text-slate-400">
-                                MP {ins.codigo_mp || '-'}
+                                {codigoMP(ins.codigo_mp)}
                               </span>
                             </td>
                             <td className="whitespace-nowrap px-1.5 py-2 text-right text-[15px] font-medium tabular-nums">
@@ -321,7 +323,15 @@ export default function Dashboard() {
           {!r && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center text-[15px] font-medium text-gray-500 dark:text-slate-400">
               <FontAwesomeIcon icon={faTriangleExclamation} className="text-3xl" aria-hidden="true" />
-              <span>Sin receta: todavía no se consultó ningún código de barras.</span>
+              {on && espera ? (
+                // Mismo cuadradito ámbar de "en espera" que el menú lateral y la barra de estado
+                <span className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                  <span className="inline-block h-3.5 w-3.5 flex-none bg-amber-400" aria-hidden="true" />
+                  Sala en espera
+                </span>
+              ) : (
+                <span>Sin receta: todavía no se consultó ningún código de barras.</span>
+              )}
             </div>
           )}
         </section>

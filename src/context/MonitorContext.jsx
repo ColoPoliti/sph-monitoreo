@@ -11,6 +11,7 @@ import {
 import mqtt from 'mqtt';
 import { CONFIG, primeraSala, roomKey } from '../config/monitor';
 import { DEMO, iniciarDemo } from '../lib/demo';
+import { esEspera } from '../lib/rooms';
 
 const MonitorContext = createContext(null);
 
@@ -74,6 +75,7 @@ export function MonitorProvider({ children }) {
       const peso = Number(d.peso) * CONFIG.ESCALA_PESO;
       const sp = Number(d.sp) * CONFIG.ESCALA_PESO;
       if (![etapa, estado, peso, sp].every(Number.isFinite)) return;
+      const espera = esEspera(etapa, sp, estado);
 
       const previa = roomsRef.current[key];
       const etapaAnt = previa ? previa.etapa : null;
@@ -90,7 +92,6 @@ export function MonitorProvider({ children }) {
           serie = [];
         }
 
-        const espera = etapa === null || etapa === 7 || (etapa === 0 && sp === 0 && estado === 0);
         if (!espera) {
           if (etapa >= 0 && etapa <= 5) {
             maxEtapa = { ...maxEtapa, [etapa]: Math.max(maxEtapa[etapa] || 0, peso) };
@@ -143,9 +144,19 @@ export function MonitorProvider({ children }) {
       clean: true,
       reconnectPeriod: 3000,
       connectTimeout: 10000,
+      keepalive: 15, // detecta antes una conexión muerta (por defecto 60 s)
     });
 
+    // Último mensaje recibido. El PLC publica cada 1 s: si pasa mucho tiempo
+    // sin datos, la conexión quedó "colgada" y se fuerza una reconexión.
+    let ultimoMsg = Date.now();
+    const forzarReconexion = () => {
+      ultimoMsg = Date.now();
+      client.end(true, {}, () => client.reconnect());
+    };
+
     client.on('connect', () => {
+      ultimoMsg = Date.now();
       setMqttOk(true);
       client.subscribe(topics, { qos: 0 });
     });
@@ -154,7 +165,21 @@ export function MonitorProvider({ children }) {
       client.on(ev, () => setMqttOk(false)),
     );
 
+    const SIN_DATOS_MS = 20000;
+    const vigilante = setInterval(() => {
+      if (client.connected && Date.now() - ultimoMsg > SIN_DATOS_MS) forzarReconexion();
+    }, 5000);
+
+    // Al volver la red o al volver a mostrar la pestaña, reconectar si hace falta.
+    const revisar = () => {
+      if (document.visibilityState === 'hidden') return;
+      if (!client.connected || Date.now() - ultimoMsg > SIN_DATOS_MS) forzarReconexion();
+    };
+    window.addEventListener('online', revisar);
+    document.addEventListener('visibilitychange', revisar);
+
     client.on('message', (topic, buf) => {
+      ultimoMsg = Date.now();
       const p = topic.split('/');
       const key = p[0] + '/' + p[1];
       if (!roomsRef.current[key]) return;
@@ -171,7 +196,12 @@ export function MonitorProvider({ children }) {
       else if (sufijo === 'receta') aplicarReceta(key, d);
     });
 
-    return () => client.end(true);
+    return () => {
+      clearInterval(vigilante);
+      window.removeEventListener('online', revisar);
+      document.removeEventListener('visibilitychange', revisar);
+      client.end(true);
+    };
   }, [actualizarSala]);
 
   const value = useMemo(
