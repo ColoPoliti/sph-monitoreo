@@ -206,9 +206,27 @@ export default function EtiquetaDigital() {
                 aria-hidden="true"
               />
               <span>
-                Dif. = cargado − SP. "Fuera" marca los insumos con una diferencia mayor
-                a {String(CONFIG.TOLERANCIA_PCT).replace('.', ',')} %. Colorante en ml; el
-                resto en kg.
+                Diferencia = cargado - SP.
+              </span>
+            </p>
+            <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
+              <FontAwesomeIcon
+                icon={faCircleInfo}
+                className="mt-[3px] flex-none text-violet-600 dark:text-violet-400"
+                aria-hidden="true"
+              />
+              <span>
+                "Fuera" marca los insumos con una diferencia mayor
+                a {String(CONFIG.TOLERANCIA_PCT).replace('.', ',')} %. 
+              </span>
+            </p>
+             <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
+              <FontAwesomeIcon
+                icon={faCircleInfo}
+                className="mt-[3px] flex-none text-violet-600 dark:text-violet-400"
+                aria-hidden="true"
+              />
+              <span>Colorante en ml; el resto en kg.
               </span>
             </p>
           </section>
