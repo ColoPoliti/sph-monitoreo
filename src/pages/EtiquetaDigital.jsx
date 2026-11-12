@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleInfo, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo, faClock, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import { Chip, ChipEstado, labelClass, subClass } from '../components/ui';
 import { CONFIG, areaDe } from '../config/monitor';
 import { getLote } from '../lib/api';
+import { descargarRecetaPdf } from '../lib/recetaPdf';
 import { codigoMP, fechaCorta, fmt, mmss, num, signo } from '../lib/format';
 
 const CARD = 'rounded-[14px] bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
@@ -56,6 +57,16 @@ export default function EtiquetaDigital() {
 
   const lote = data?.lote;
   const area = lote ? areaDe(lote.area) : null;
+
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const descargarPdf = async () => {
+    setGenerandoPdf(true);
+    try {
+      await descargarRecetaPdf(lote, data.etapas || []);
+    } finally {
+      setGenerandoPdf(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -202,6 +213,19 @@ export default function EtiquetaDigital() {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mismo estilo que los badges (Chip "mal"): fondo rojo suave, borde y texto rojos */}
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={descargarPdf}
+                disabled={generandoPdf}
+                className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-current bg-red-500/15 px-3 py-1 text-[14px] font-semibold text-red-700 transition-colors hover:bg-red-500/25 disabled:cursor-wait disabled:opacity-60 dark:bg-red-400/15 dark:text-red-300 dark:hover:bg-red-400/25"
+              >
+                <FontAwesomeIcon icon={faFilePdf} aria-hidden="true" />
+                {generandoPdf ? 'Generando…' : 'Descargar receta PDF'}
+              </button>
             </div>
 
             <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
