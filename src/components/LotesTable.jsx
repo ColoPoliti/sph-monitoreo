@@ -1,7 +1,13 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 import { areaDe } from '../config/monitor';
 import { fechaCorta, mmss } from '../lib/format';
-import { ChipEstado } from './ui';
+import { Chip, ChipEstado } from './ui';
+
+// Fecha dentro de un badge; sin fecha (ej.: lote sin terminar) muestra un guion
+const BadgeFecha = ({ ts, tipo }) =>
+  ts ? <Chip tipo={tipo}>{fechaCorta(ts)}</Chip> : '—';
 
 const TH =
   'px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400';
@@ -21,9 +27,10 @@ export default function LotesTable({ filas, conSala = false, minWidth = 600 }) {
                 <th scope="col" className={`${TH} text-left`}>PLC</th>
               </>
             )}
-            <th scope="col" className={`${TH} text-left`}>Inicio</th>
             <th scope="col" className={`${TH} text-left`}>Código de barras</th>
             <th scope="col" className={`${TH} text-left`}>Producto</th>
+            <th scope="col" className={`${TH} text-left`}>Inicio</th>
+            <th scope="col" className={`${TH} text-left`}>Fin</th>
             <th scope="col" className={`${TH} text-right`}>Total</th>
             <th scope="col" className={`${TH} text-right`}>Estado</th>
           </tr>
@@ -37,7 +44,7 @@ export default function LotesTable({ filas, conSala = false, minWidth = 600 }) {
                   <Link
                     to={`/lotes/${r.id}`}
                     aria-label={`Ver la etiqueta digital del lote ${r.id}`}
-                    className="inline-flex min-h-9 items-center rounded-md px-2.5 py-0.5 text-[15px] font-bold text-violet-700 dark:text-violet-300 underline"
+                    className="inline-flex min-h-9 items-center rounded-md px-2.5 py-0.5 text-[15px] font-bold text-teal-600 dark:text-teal-400 underline"
                   >
                     #{r.id}
                   </Link>
@@ -48,14 +55,18 @@ export default function LotesTable({ filas, conSala = false, minWidth = 600 }) {
                     <td className={`${TD} tabular-nums`}>{r.sala}</td>
                   </>
                 )}
-                <td className={`${TD} whitespace-nowrap tabular-nums`}>
-                  {fechaCorta(r.inicio)}
-                </td>
                 <td className={`${TD} font-bold tabular-nums text-violet-700 dark:text-violet-300`}>
                   {r.codigo_barra}
                 </td>
                 <td className={TD}>{r.nombre_producto}</td>
+                <td className={`${TD} whitespace-nowrap tabular-nums`}>
+                  <BadgeFecha ts={r.inicio} tipo="inicio" />
+                </td>
+                <td className={`${TD} whitespace-nowrap tabular-nums`}>
+                  <BadgeFecha ts={r.fin} tipo="fin" />
+                </td>
                 <td className={`${TD} whitespace-nowrap text-right tabular-nums`}>
+                  <FontAwesomeIcon icon={faClock} className="mr-1.5 text-gray-400 dark:text-slate-500" />
                   {mmss(r.tiempo_total_s)}
                 </td>
                 <td className={`${TD} text-right`}>

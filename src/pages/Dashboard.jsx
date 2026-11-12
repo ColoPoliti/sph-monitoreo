@@ -105,9 +105,9 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4">
       {/* Encabezado del producto */}
-      {/* Mobile y tablet (< lg): producto y código de barras apilados con una línea divisoria. Desde lg: lado a lado */}
-      <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-6`}>
-        <div className="flex min-w-0 flex-col gap-1.5">
+      {/* Small y medium (< lg): producto arriba, línea divisoria y código de barras debajo. Desktop (lg): lado a lado */}
+      <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
+        <div className="flex min-w-0 flex-col gap-1.5 lg:flex-1">
           <h1 className="m-0 sm:text-4xl font-extrabold leading-[1.15] [overflow-wrap:anywhere] text-xl">
             {r ? String(r.producto?.nombre || '').toUpperCase() : 'SIN LOTE'}
           </h1>
@@ -117,7 +117,7 @@ export default function Dashboard() {
               : 'SKU -  ·  Tolva -'}
           </span>
         </div>
-        <div className="flex flex-col gap-1.5 border-t border-gray-200 pt-3 dark:border-slate-800 lg:items-end lg:border-0 lg:pt-0">
+        <div className="flex flex-col items-start gap-1.5 border-t border-gray-200 pt-3 dark:border-slate-800 lg:flex-none lg:items-end lg:border-0 lg:pt-0">
           <span className={labelClass}>Código de barras</span>
           <span className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300 sm:text-[28px]">
             {r ? r.codigo_barra : '-'}

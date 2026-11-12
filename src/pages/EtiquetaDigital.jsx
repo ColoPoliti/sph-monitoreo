@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo, faClock } from '@fortawesome/free-solid-svg-icons';
 import { Chip, ChipEstado, labelClass, subClass } from '../components/ui';
 import { CONFIG, areaDe } from '../config/monitor';
 import { getLote } from '../lib/api';
@@ -78,9 +78,9 @@ export default function EtiquetaDigital() {
 
       {!cargando && data && lote && (
         <div className="flex flex-col gap-4">
-          {/* Mobile y tablet (< lg): producto y código de barras apilados con una línea divisoria. Desde lg: lado a lado */}
-          <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-6`}>
-            <div className="flex min-w-0 flex-col gap-1.5">
+          {/* Small y medium (< lg): producto arriba, línea divisoria y código de barras debajo. Desktop (lg): lado a lado */}
+          <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
+            <div className="flex min-w-0 flex-col gap-1.5 lg:flex-1">
               <h1 className="m-0 text-2xl font-extrabold leading-[1.15] [overflow-wrap:anywhere] sm:text-[28px]">
                 {lote.nombre_producto}
               </h1>
@@ -89,7 +89,7 @@ export default function EtiquetaDigital() {
                 Tolva {lote.tolva === null ? '-' : lote.tolva}
               </span>
             </div>
-            <div className="flex flex-col items-start gap-1.5 border-t border-gray-200 pt-3 dark:border-slate-800 lg:items-end lg:border-0 lg:pt-0">
+            <div className="flex flex-col items-start gap-1.5 border-t border-gray-200 pt-3 dark:border-slate-800 lg:flex-none lg:items-end lg:border-0 lg:pt-0">
               <span className={labelClass}>Código de barras</span>
               <span className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300 sm:text-[28px]">
                 {lote.codigo_barra}
@@ -103,18 +103,23 @@ export default function EtiquetaDigital() {
             <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
               <span className={labelClass}>Inicio</span>
               <span className="text-[22px] font-bold tabular-nums">
-                {fechaCorta(lote.inicio)}
+                {lote.inicio ? (
+                  <Chip tipo="inicio" grande>{fechaCorta(lote.inicio)}</Chip>
+                ) : (
+                  '—'
+                )}
               </span>
             </div>
             <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
               <span className={labelClass}>Fin</span>
               <span className="text-[22px] font-bold tabular-nums">
-                {fechaCorta(lote.fin)}
+                {lote.fin ? <Chip tipo="fin" grande>{fechaCorta(lote.fin)}</Chip> : '—'}
               </span>
             </div>
             <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
               <span className={labelClass}>Tiempo total</span>
               <span className="text-[22px] font-bold tabular-nums">
+                <FontAwesomeIcon icon={faClock} className="mr-2 text-[18px] text-gray-400 dark:text-slate-500" />
                 {mmss(lote.tiempo_total_s)}
               </span>
             </div>
