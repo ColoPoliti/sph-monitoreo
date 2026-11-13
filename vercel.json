@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://api.marcospoliti.ar/:path*" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
-}

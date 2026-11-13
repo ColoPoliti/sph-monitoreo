@@ -42,7 +42,7 @@ export default function Layout() {
         <main className="h-full min-w-0 flex-1 overflow-y-auto bg-slate-200 p-4 dark:bg-slate-950">
           {/* Mobile: nombre de la vista/sala en un badge arriba del contenido (en el TopBar se oculta para centrar el logo) */}
           <div className="mb-3 flex sm:hidden">
-            <span className="inline-flex min-w-0 items-center rounded-full border border-gray-300 bg-white px-3 py-1.5 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+            <span className="inline-flex min-w-0 items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-900 shadow-md dark:border-white dark:shadow-none">
               <span className="truncate text-[13px] font-extrabold leading-tight">{titulo}</span>
             </span>
           </div>

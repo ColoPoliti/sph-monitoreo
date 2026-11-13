@@ -1,4 +1,5 @@
 import { CONFIG } from '../config/monitor';
+import { aplicarAprobacion, aplicarAprobaciones } from './aprobaciones';
 
 async function api(path) {
   const r = await fetch(CONFIG.API_BASE + path, { cache: 'no-store' });
@@ -8,7 +9,7 @@ async function api(path) {
 
 export function getUltimas({ area, sala, limit = 4 }) {
   const params = new URLSearchParams({ area, sala, limit: String(limit) });
-  return api('/lotes.php?' + params);
+  return api('/lotes.php?' + params).then(aplicarAprobaciones);
 }
 
 export function getHistorial(filtro) {
@@ -22,9 +23,11 @@ export function getHistorial(filtro) {
     p.set('horaH', filtro.horaH);
   }
   p.set('limit', '500');
-  return api('/lotes.php?' + p);
+  return api('/lotes.php?' + p).then(aplicarAprobaciones);
 }
 
 export function getLote(id) {
-  return api('/lotes.php?id=' + encodeURIComponent(id));
+  return api('/lotes.php?id=' + encodeURIComponent(id)).then((d) =>
+    d && d.lote ? { ...d, lote: aplicarAprobacion(d.lote) } : d,
+  );
 }

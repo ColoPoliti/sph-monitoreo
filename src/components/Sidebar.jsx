@@ -4,7 +4,11 @@ import { CONFIG, roomKey } from '../config/monitor';
 import { useMonitor } from '../context/MonitorContext';
 import { enEspera, enLinea, subSala } from '../lib/rooms';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faClockRotateLeft, faFlask, faIndustry, faSprayCan } from '@fortawesome/free-solid-svg-icons';
+
+// Ícono de cada área (por su key en CONFIG.AREAS); un área nueva sin ícono usa el de fábrica
+const ICONOS_AREA = { elaboracion: faFlask, aerosoles: faSprayCan };
+const iconoArea = (key) => ICONOS_AREA[key] || faIndustry;
 import logoFoot from '../assets/logo-foot.png';
 
 function IconChevron({ className }) {
@@ -62,11 +66,11 @@ export default function Sidebar({ open, onClose, onToggle }) {
         open
           ? 'flex w-[280px] lg:w-64'
           : 'hidden lg:flex lg:w-[88px]'
-      } fixed bottom-0 left-0 top-[72px] z-30 flex-col overflow-hidden border-r border-gray-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-950 dark:shadow-none transition-[width] duration-200 lg:static lg:bottom-auto lg:top-auto lg:z-auto lg:h-full lg:flex-none`}
+      } fixed bottom-0 left-0 top-[72px] z-30 flex-col overflow-hidden border-r border-slate-400 bg-white shadow-md dark:border-slate-900 dark:bg-slate-950 dark:shadow-none transition-[width] duration-200 lg:static lg:bottom-auto lg:top-auto lg:z-auto lg:h-full lg:flex-none`}
     >
       {/* Encabezado / flecha para contraer o expandir el menú */}
       <div
-        className={`flex h-14 flex-none items-center border-b border-gray-200 dark:border-slate-800 ${
+        className={`flex h-14 flex-none items-center border-b border-slate-400 dark:border-black ${
           open ? 'justify-between px-4' : 'justify-center px-2'
         }`}
       >
@@ -98,30 +102,66 @@ export default function Sidebar({ open, onClose, onToggle }) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
-        {/* Historial */}
-        <button
-          type="button"
-          onClick={irAHistorial}
-          aria-current={histActivo ? 'page' : undefined}
-          aria-label="Historial de elaboraciones"
-          title="Historial de elaboraciones"
-          className={`flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-black/5 py-2 text-center font-bold text-gray-900 transition-colors hover:bg-black/10 dark:border-slate-700 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 ${
-            open ? 'min-h-11 px-3 text-[14px]' : 'min-h-10 px-1'
+      {/* Sin padding arriba: el primer ítem (Historial) queda pegado a "Salas y PLC" */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-3">
+        {/* Historial: un ítem más del menú, alineado con los PLC (título arriba; abajo el reloj en el
+            lugar del indicador de estado). Fondo oscuro casi como el del menú; seleccionado = igual que un PLC */}
+        <div
+          className={`-mx-2 border-b border-slate-400 px-2 transition-colors dark:border-black ${
+            open ? 'py-1' : 'flex justify-center py-1.5'
           } ${
             histActivo
-              ? 'ring-2 ring-slate-400 ring-offset-2 ring-offset-white dark:ring-slate-500 dark:ring-offset-slate-950'
-              : ''
+              ? 'border-l-4 border-l-teal-600 bg-slate-900 pl-1 dark:border-l-teal-600 dark:bg-slate-900'
+              : 'bg-slate-100 dark:bg-slate-900/50'
           }`}
         >
-          {open ? (
-            <span className="min-w-0 truncate">Historial de elaboraciones</span>
-          ) : (
-            <FontAwesomeIcon icon={faClockRotateLeft} className="text-lg" aria-hidden="true" />
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={irAHistorial}
+            aria-current={histActivo ? 'page' : undefined}
+            aria-label="Historial de elaboraciones · Todas las salas"
+            title="Historial de elaboraciones"
+            className={`flex w-full cursor-pointer rounded-lg border-transparent transition-colors ${
+              open
+                ? 'min-h-11 flex-col justify-center border-l-2 py-2 pl-4 pr-2 text-left'
+                : 'h-11 items-center justify-center border-2 px-1'
+            } ${histActivo ? '' : 'hover:bg-gray-200/70 dark:hover:bg-slate-800/60'}`}
+          >
+            {open ? (
+              <>
+                <span
+                  className={`block w-full truncate text-[14px] font-extrabold ${
+                    histActivo ? 'text-white' : 'text-gray-600 dark:text-slate-300'
+                  }`}
+                >
+                  Historial de elaboraciones
+                </span>
+                <span className="flex w-full min-w-0 items-center gap-2">
+                  <FontAwesomeIcon
+                    icon={faClockRotateLeft}
+                    className="flex-none text-[10px] text-teal-600 dark:text-teal-400"
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={`truncate text-[12px] font-medium ${
+                      histActivo ? 'text-white/85' : 'text-gray-500 dark:text-slate-400'
+                    }`}
+                  >
+                    Todas las salas
+                  </span>
+                </span>
+              </>
+            ) : (
+              <FontAwesomeIcon
+                icon={faClockRotateLeft}
+                className="text-base text-teal-600 dark:text-teal-400"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+        </div>
 
-        <div className="mt-2 border-t border-gray-200 dark:border-slate-800 pt-2">
+        <div>
           {CONFIG.AREAS.map((area) => {
             const abierta = !cerradas[area.key];
             const mostrarPlcs = open ? abierta : true;
@@ -134,12 +174,18 @@ export default function Sidebar({ open, onClose, onToggle }) {
                     onClick={() => toggleArea(area.key)}
                     aria-expanded={abierta}
                     aria-label={`${area.label} (${area.plcs.length} PLC)`}
-                    className="flex min-h-10 -mx-2 w-[calc(100%+1rem)] cursor-pointer items-center gap-2 rounded-none bg-slate-300 px-5 py-2 text-left transition-colors hover:bg-slate-400/70 dark:bg-slate-800 dark:hover:bg-slate-700"
+                    className="flex min-h-10 -mx-2 w-[calc(100%+1rem)] cursor-pointer items-center gap-2 rounded-none bg-slate-300 px-4 py-2 text-left transition-colors hover:bg-slate-400/70 dark:bg-[#172033] dark:hover:bg-slate-800"
                   >
-                    <span className="min-w-0 flex-1 truncate text-[11px] font-extrabold uppercase tracking-[1.4px] text-slate-800 dark:text-white">
+                    <FontAwesomeIcon
+                      icon={iconoArea(area.key)}
+                      className="w-4 flex-none text-slate-800 dark:text-white"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-[11px] font-extrabold uppercase tracking-[1px] text-slate-800 dark:text-white">
                       {area.label}
                     </span>
-                    <span className="whitespace-nowrap text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    {/* Cantidad de PLC en un badge blanco pleno */}
+                    <span className="whitespace-nowrap rounded-md bg-white px-2 py-0.5 text-[11px] font-extrabold text-slate-800 shadow-sm">
                       {area.plcs.length} PLC
                     </span>
                     <IconChevron
@@ -149,11 +195,13 @@ export default function Sidebar({ open, onClose, onToggle }) {
                     />
                   </button>
                 ) : (
+                  // Menú contraído: solo el ícono del área (el nombre queda en el title y para lectores de pantalla)
                   <div
-                    className="-mx-2 truncate rounded-none bg-slate-300 px-1 py-1.5 text-center text-[9px] font-extrabold uppercase tracking-[0.4px] text-slate-800 dark:bg-slate-800 dark:text-white"
+                    className="-mx-2 flex justify-center rounded-none bg-slate-300 px-1 py-2 text-slate-800 dark:bg-[#172033] dark:text-white"
                     title={`${area.label} (${area.plcs.length} PLC)`}
                   >
-                    {area.label}
+                    <FontAwesomeIcon icon={iconoArea(area.key)} className="text-base" aria-hidden="true" />
+                    <span className="sr-only">{area.label}</span>
                   </div>
                 )}
 
@@ -161,7 +209,8 @@ export default function Sidebar({ open, onClose, onToggle }) {
                   <div className="flex flex-col pt-1">
                     {area.plcs.map((plc) => {
                       const s = rooms[roomKey(area.key, plc)];
-                      const activo = selectedKey === s.key;
+                      // En el historial no se marca ningún PLC (ahí el seleccionado es el ítem del historial)
+                      const activo = selectedKey === s.key && !histActivo;
                       const indicador = (
                         <span
                           className={`h-2 w-2 flex-none rounded-[2px] ${
@@ -173,9 +222,13 @@ export default function Sidebar({ open, onClose, onToggle }) {
 
                       return open ? (
                         // Menú expandido: una línea abajo separa cada item
+                        // Activo: toda la fila (100% del ancho del menú) en slate oscuro con texto blanco y borde izquierdo
+                        // verde (el mismo de la card del lote); pl-1 compensa el borde para que el texto no se corra
                         <div
                           key={s.key}
-                          className="-mx-2 border-b border-gray-200 px-2 py-1 dark:border-slate-800"
+                          className={`-mx-2 border-b border-slate-400 px-2 py-1 transition-colors dark:border-black ${
+                            activo ? 'border-l-4 border-l-teal-600 bg-slate-900 pl-1 dark:border-l-teal-600 dark:bg-slate-900' : ''
+                          }`}
                         >
                           <button
                             type="button"
@@ -185,13 +238,13 @@ export default function Sidebar({ open, onClose, onToggle }) {
                             title={`PLC ${plc} · ${area.label}`}
                             className={`flex min-h-11 w-full cursor-pointer flex-col justify-center rounded-lg border-l-2 py-2 pl-4 pr-2 text-left transition-colors ${
                               activo
-                                ? 'border-transparent bg-violet-100 dark:bg-violet-500/10'
+                                ? 'border-transparent'
                                 : 'border-transparent hover:bg-gray-100 dark:hover:bg-slate-800/60'
                             }`}
                           >
                             <span
-                              className={`block w-full truncate text-[14px] font-semibold ${
-                                activo ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-300'
+                              className={`block w-full truncate text-[14px] font-extrabold ${
+                                activo ? 'text-white' : 'text-gray-600 dark:text-slate-300'
                               }`}
                             >
                               PLC {plc}
@@ -199,7 +252,11 @@ export default function Sidebar({ open, onClose, onToggle }) {
                             {/* Estado e indicador en la misma línea */}
                             <span className="flex w-full min-w-0 items-center gap-2">
                               {indicador}
-                              <span className="truncate text-[12px] font-medium text-gray-500 dark:text-slate-400">
+                              <span
+                                className={`truncate text-[12px] font-medium ${
+                                  activo ? 'text-white/85' : 'text-gray-500 dark:text-slate-400'
+                                }`}
+                              >
                                 {subSala(s, now)}
                               </span>
                             </span>
@@ -210,7 +267,9 @@ export default function Sidebar({ open, onClose, onToggle }) {
                         // una línea separa cada item
                         <div
                           key={s.key}
-                          className="-mx-2 flex justify-center border-b border-gray-200 px-2 py-1.5 dark:border-slate-800"
+                          className={`-mx-2 flex justify-center border-b border-slate-400 px-2 py-1.5 transition-colors dark:border-black ${
+                            activo ? 'border-l-4 border-l-teal-600 bg-slate-900 pl-1 dark:border-l-teal-600 dark:bg-slate-900' : ''
+                          }`}
                         >
                           <button
                             type="button"
@@ -220,14 +279,14 @@ export default function Sidebar({ open, onClose, onToggle }) {
                             title={`PLC ${plc} · ${area.label} · ${subSala(s, now)}`}
                             className={`flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border-2 px-1 transition-colors ${
                               activo
-                                ? 'border-transparent bg-violet-100 dark:bg-violet-500/10'
+                                ? 'border-transparent'
                                 : 'border-transparent hover:bg-gray-100 dark:hover:bg-slate-800/60'
                             }`}
                           >
                             {indicador}
                             <span
-                              className={`whitespace-nowrap text-[10px] font-bold leading-none ${
-                                activo ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-300'
+                              className={`whitespace-nowrap text-[10px] font-extrabold leading-none ${
+                                activo ? 'text-white' : 'text-gray-600 dark:text-slate-300'
                               }`}
                             >
                               PLC {plc}
@@ -246,7 +305,7 @@ export default function Sidebar({ open, onClose, onToggle }) {
 
       {/* Logo al pie, como el sidebar original */}
       <div
-        className={`flex flex-none items-center border-t border-gray-200 dark:border-slate-800 py-4 ${
+        className={`flex flex-none items-center border-t border-slate-400 dark:border-black py-4 ${
           open ? 'justify-start gap-2.5 px-4' : 'justify-center px-2'
         }`}
       >

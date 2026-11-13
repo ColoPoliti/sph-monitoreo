@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faEye } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 import { areaDe } from '../config/monitor';
 import { fechaCorta, mmss } from '../lib/format';
-import { Chip, ChipEstado } from './ui';
+import { Chip, ChipEstado, SwitchAprobar } from './ui';
 
 // Fecha dentro de un badge; sin fecha (ej.: lote sin terminar) muestra un guion
 const BadgeFecha = ({ ts, tipo }) =>
@@ -13,7 +13,17 @@ const TH =
   'px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400';
 const TD = 'px-1.5 py-2 align-middle text-[15px] font-medium';
 
-export default function LotesTable({ filas, conSala = false, minWidth = 600 }) {
+// onAprobar (opcional, vista Admin): agrega al final la columna "Aprobar" con un switch.
+// Se llama con (fila, encendido). onInfo (opcional): columna "Info" que abre los datos del lote.
+// soloLectura: muestra el switch pero no deja cambiarlo (perfil usuario).
+export default function LotesTable({
+  filas,
+  conSala = false,
+  minWidth = 600,
+  onAprobar,
+  onInfo,
+  soloLectura = false,
+}) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full" style={{ minWidth }}>
@@ -33,6 +43,8 @@ export default function LotesTable({ filas, conSala = false, minWidth = 600 }) {
             <th scope="col" className={`${TH} text-left`}>Fin</th>
             <th scope="col" className={`${TH} text-right`}>Total</th>
             <th scope="col" className={`${TH} text-right`}>Estado</th>
+            {onAprobar && <th scope="col" className={`${TH} text-center`}>Aprobar</th>}
+            {onInfo && <th scope="col" className={`${TH} text-center`}>Info</th>}
           </tr>
         </thead>
         <tbody>
@@ -69,9 +81,33 @@ export default function LotesTable({ filas, conSala = false, minWidth = 600 }) {
                   <FontAwesomeIcon icon={faClock} className="mr-1.5 text-gray-400 dark:text-slate-500" />
                   {mmss(r.tiempo_total_s)}
                 </td>
-                <td className={`${TD} text-right`}>
+                <td className={`${TD} whitespace-nowrap text-right`}>
                   <ChipEstado estado={r.estado} />
                 </td>
+                {onAprobar && (
+                  <td className={`${TD} text-center`}>
+                    {/* Switch: encendido = aprobado por calidad */}
+                    <SwitchAprobar lote={r} onAprobar={onAprobar} deshabilitado={soloLectura} />
+                  </td>
+                )}
+                {onInfo && (
+                  <td className={`${TD} text-center`}>
+                    {/* Con comentario de rechazo el ícono va en rojo */}
+                    <button
+                      type="button"
+                      onClick={() => onInfo(r)}
+                      aria-label={`Información del lote #${r.id}${r.calidad?.comentario ? ' (tiene comentario)' : ''}`}
+                      title={r.calidad?.comentario ? 'Ver información y comentario' : 'Ver información'}
+                      className={`inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-lg transition-colors hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                        r.calidad?.comentario
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-violet-600 dark:text-violet-400'
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faEye} aria-hidden="true" />
+                    </button>
+                  </td>
+                )}
               </tr>
             );
           })}

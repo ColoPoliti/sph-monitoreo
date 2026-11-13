@@ -19,6 +19,9 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="historial" element={<Historial />} />
             <Route path="lotes/:id" element={<EtiquetaDigital />} />
+            {/* Rutas viejas de aprobación: el login ahora es un modal (navbar) y se aprueba desde el historial */}
+            <Route path="admin/login" element={<Navigate to="/historial" replace />} />
+            <Route path="admin" element={<Navigate to="/historial" replace />} />
             <Route path="dashboard" element={<Navigate to="/" replace />} />
           </Route>
 

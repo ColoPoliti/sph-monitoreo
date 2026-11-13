@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBarcode,
+  faChartLine,
+  faCircleInfo,
+  faClockRotateLeft,
+  faFlask,
+  faListOl,
+  faTriangleExclamation,
+  faWeightScale,
+} from '@fortawesome/free-solid-svg-icons';
 import AnimatedCounter from '../components/AnimatedCounter';
 import LotesTable from '../components/LotesTable';
 import PesoChart from '../components/PesoChart';
-import { Chip, ProgressPill, labelClass, subClass } from '../components/ui';
+import { ChipEtapa, ProgressPill, labelClass, subClass } from '../components/ui';
 import { CONFIG } from '../config/monitor';
 import { useMonitor } from '../context/MonitorContext';
 import { getUltimas } from '../lib/api';
@@ -106,7 +115,8 @@ export default function Dashboard() {
     <div className="flex flex-col gap-4">
       {/* Encabezado del producto */}
       {/* Small y medium (< lg): producto arriba, línea divisoria y código de barras debajo. Desktop (lg): lado a lado */}
-      <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
+      {/* Borde izquierdo grueso con el verde del botón "Historial de elaboraciones" */}
+      <section className={`${CARD} flex flex-col gap-3 border-l-[6px] border-teal-600 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
         <div className="flex min-w-0 flex-col gap-1.5 lg:flex-1">
           <h1 className="m-0 sm:text-4xl font-extrabold leading-[1.15] [overflow-wrap:anywhere] text-xl">
             {r ? String(r.producto?.nombre || '').toUpperCase() : 'SIN LOTE'}
@@ -118,7 +128,10 @@ export default function Dashboard() {
           </span>
         </div>
         <div className="flex flex-col items-start gap-1.5 border-t border-gray-200 pt-3 dark:border-slate-800 lg:flex-none lg:items-end lg:border-0 lg:pt-0">
-          <span className={labelClass}>Código de barras</span>
+          <span className={`${labelClass} flex items-center gap-2`}>
+            <FontAwesomeIcon icon={faBarcode} aria-hidden="true" />
+            Código de barras
+          </span>
           <span className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300 sm:text-[28px]">
             {r ? r.codigo_barra : '-'}
           </span>
@@ -132,7 +145,10 @@ export default function Dashboard() {
           className={`${CARD} flex min-w-0 flex-1 basis-[520px] flex-wrap gap-x-6 gap-y-4`}
         >
           <div className="flex min-w-0 flex-1 basis-[280px] flex-col gap-2">
-            <span className={labelClass}>Etapa</span>
+            <span className={`${labelClass} flex items-center gap-2`}>
+              <FontAwesomeIcon icon={faListOl} aria-hidden="true" />
+              Etapa
+            </span>
             <span
               className={`text-lg font-bold leading-[1.1] sm:text-[40px] ${
                 on ? '' : 'text-slate-400 dark:text-slate-600' // "Sin datos" (PLC sin conexión)
@@ -145,7 +161,10 @@ export default function Dashboard() {
                 ? `Etapa ${s.etapa + 1} de ${s.area.etapas.length}  ·  ${mmss((now - s.etapaIni) / 1000)}`
                 : ''}
             </span>
-            <span className={`${labelClass} mt-1.5`}>Peso de la balanza</span>
+            <span className={`${labelClass} mt-1.5 flex items-center gap-2`}>
+              <FontAwesomeIcon icon={faWeightScale} aria-hidden="true" />
+              Peso de la balanza
+            </span>
             <span className="text-5xl font-bold leading-[1.05] tabular-nums sm:text-[76px]">
               <AnimatedCounter value={on ? s.peso : 0} /> {unidad}
             </span>
@@ -225,7 +244,10 @@ export default function Dashboard() {
           aria-label="Receta"
           className={`${CARD} flex min-w-0 flex-[1.15] basis-[560px] flex-col gap-2.5`}
         >
-          <span className={labelClass}>Receta</span>
+          <span className={`${labelClass} flex items-center gap-2`}>
+            <FontAwesomeIcon icon={faFlask} aria-hidden="true" />
+            Receta
+          </span>
 
           {/* La tabla solo se muestra cuando hay receta */}
           {r && (
@@ -273,9 +295,7 @@ export default function Dashboard() {
                           <tr key={ins.etapa}>
                             {/* Pendiente: warning · Listo (finalizado): verde · En curso: índigo con borde */}
                             <td className="whitespace-nowrap px-1.5 py-2">
-                              <Chip tipo={listo ? 'ok' : curso ? 'curso' : 'inc'}>
-                                {listo ? 'Listo' : curso ? 'En curso' : 'Pendiente'}
-                              </Chip>
+                              <ChipEtapa listo={listo} curso={curso} />
                             </td>
                             <td className="px-1.5 py-2 text-[15px] font-medium">
                               {String(ins.nombre || '').toUpperCase()}
@@ -332,7 +352,10 @@ export default function Dashboard() {
         aria-label="Peso en el tiempo"
         className={`${CARD} flex flex-col gap-2`}
       >
-        <span className={labelClass}>Peso en el tiempo</span>
+        <span className={`${labelClass} flex items-center gap-2`}>
+          <FontAwesomeIcon icon={faChartLine} aria-hidden="true" />
+          Peso en el tiempo
+        </span>
         <PesoChart room={s} now={now} />
       </section>
 
@@ -342,17 +365,10 @@ export default function Dashboard() {
         className={`${CARD} flex flex-col gap-2.5`}
       >
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
-          <span className={labelClass}>Últimas elaboraciones</span>
-          <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
-            <FontAwesomeIcon
-              icon={faCircleInfo}
-              className="mt-[3px] flex-none text-violet-600 dark:text-violet-400"
-              aria-hidden="true"
-            />
-            <span>
-              {s.area.label} {s.plc} · click en un lote para ver su etiqueta digital
-            </span>
-          </p>
+          <span className={`${labelClass} flex items-center gap-2`}>
+            <FontAwesomeIcon icon={faClockRotateLeft} aria-hidden="true" />
+            Últimas elaboraciones
+          </span>
         </div>
         {/* La tabla solo se muestra cuando hay elaboraciones */}
         {ultimas.length > 0 && <LotesTable filas={ultimas} minWidth={600} />}
@@ -368,6 +384,18 @@ export default function Dashboard() {
             <span>{avisoUlt.texto}</span>
           </div>
         )}
+
+        {/* Nota de info al pie de la card (mismo estilo que las de la etiqueta digital) */}
+        <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
+          <FontAwesomeIcon
+            icon={faCircleInfo}
+            className="mt-[3px] flex-none text-violet-600 dark:text-violet-400"
+            aria-hidden="true"
+          />
+          <span>
+            {s.area.label} {s.plc} · click en un lote para ver su etiqueta digital
+          </span>
+        </p>
       </section>
     </div>
   );

@@ -23,7 +23,8 @@ manteniendo la misma estructura visual y funcionalidad.
 ## Requisitos
 
 - Node.js 20+.
-- Acceso a `wss://mqtt.marcospoliti.ar` y a `https://api.marcospoliti.ar`.
+- Acceso al broker MQTT por WebSocket y a la API PHP de lotes (en la red de planta,
+  por defecto `ws://10.200.1.243:9001` y `http://10.200.1.243:8080`).
 
 ## Desarrollo
 
@@ -49,10 +50,10 @@ Los valores por defecto están en `src/config/monitor.js`. Se pueden sobrescribi
 con variables de entorno de Vite (crear `.env.local`):
 
 ```env
-VITE_MQTT_URL=wss://mqtt.marcospoliti.ar
+VITE_MQTT_URL=wss://mqtt.ejemplo.com
 VITE_MQTT_USER=web_lectura
 VITE_MQTT_PASS=admin.sph
-VITE_BROKER_ETIQUETA=mqtt.marcospoliti.ar
+VITE_BROKER_ETIQUETA=mqtt.ejemplo.com
 VITE_API_BASE=/api
 ```
 
@@ -81,7 +82,7 @@ Subir **el contenido de `dist/`** a la carpeta pública del servidor
 
 1. **Fallback de rutas**: devolver `index.html` cuando la ruta no sea un archivo,
    para que `/historial` y `/lotes/13` funcionen al recargar.
-2. **Proxy de `/api`**: redirigir `/api/*` a `https://api.marcospoliti.ar/*`.
+2. **Proxy de `/api`**: redirigir `/api/*` a `https://api.ejemplo.com/*`.
    Es necesario porque la API PHP no envía cabeceras CORS.
 
 ### Nginx
@@ -95,9 +96,9 @@ server {
     index index.html;
 
     location /api/ {
-        proxy_pass https://api.marcospoliti.ar/;
+        proxy_pass https://api.ejemplo.com/;
         proxy_ssl_server_name on;
-        proxy_set_header Host api.marcospoliti.ar;
+        proxy_set_header Host api.ejemplo.com;
     }
 
     location / {
@@ -114,7 +115,7 @@ Con `mod_rewrite` y `mod_proxy` habilitados, en `.htaccess`:
 RewriteEngine On
 
 # Proxy hacia la API PHP
-RewriteRule ^api/(.*)$ https://api.marcospoliti.ar/$1 [P,L]
+RewriteRule ^api/(.*)$ https://api.ejemplo.com/$1 [P,L]
 
 # Fallback de la SPA
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -129,7 +130,7 @@ no hace falta el proxy: el valor por defecto `API_BASE=/api` funciona directo.
 
 ### Si no podés usar proxy
 
-Definí `VITE_API_BASE=https://api.marcospoliti.ar` **antes de compilar**. Pero la API
+Definí `VITE_API_BASE=https://api.ejemplo.com` **antes de compilar**. Pero la API
 debe habilitar CORS para el dominio del frontend; hoy no lo hace, por eso el proxy
 es la opción recomendada.
 

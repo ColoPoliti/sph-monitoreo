@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleInfo, faClock, faFilePdf } from '@fortawesome/free-solid-svg-icons';
-import { Chip, ChipEstado, labelClass, subClass } from '../components/ui';
+import { faCircleInfo, faClock, faFilePdf, faFlask } from '@fortawesome/free-solid-svg-icons';
+import { Chip, ChipEstado, SwitchAprobar, labelClass, subClass } from '../components/ui';
 import { CONFIG, areaDe } from '../config/monitor';
 import { getLote } from '../lib/api';
 import { descargarRecetaPdf } from '../lib/recetaPdf';
+import { useAprobacionCalidad } from '../lib/useAprobacionCalidad';
 import { codigoMP, fechaCorta, fmt, mmss, num, signo } from '../lib/format';
 
 const CARD = 'rounded-[14px] bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
@@ -58,6 +59,12 @@ export default function EtiquetaDigital() {
   const lote = data?.lote;
   const area = lote ? areaDe(lote.area) : null;
 
+  // Con sesión de administrador: switch de aprobación al lado del PDF.
+  // El hook trabaja con una lista de filas; acá la "lista" es solo este lote.
+  const { esAdmin, onAprobar } = useAprobacionCalidad((fn) =>
+    setEstado((e) => (e.data?.lote ? { ...e, data: { ...e.data, lote: fn([e.data.lote])[0] } } : e)),
+  );
+
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const descargarPdf = async () => {
     setGenerandoPdf(true);
@@ -78,7 +85,6 @@ export default function EtiquetaDigital() {
         >
           ← Volver
         </button>
-        <span className={labelClass}>Etiqueta digital</span>
       </div>
 
       {cargando && <p className={subClass}>Cargando…</p>}
@@ -90,7 +96,8 @@ export default function EtiquetaDigital() {
       {!cargando && data && lote && (
         <div className="flex flex-col gap-4">
           {/* Small y medium (< lg): producto arriba, línea divisoria y código de barras debajo. Desktop (lg): lado a lado */}
-          <section className={`${CARD} flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
+          {/* Borde izquierdo verde, igual que la card del lote en el monitor */}
+          <section className={`${CARD} flex flex-col gap-3 border-l-[6px] border-teal-600 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
             <div className="flex min-w-0 flex-col gap-1.5 lg:flex-1">
               <h1 className="m-0 text-2xl font-extrabold leading-[1.15] [overflow-wrap:anywhere] sm:text-[28px]">
                 {lote.nombre_producto}
@@ -109,44 +116,69 @@ export default function EtiquetaDigital() {
             </div>
           </section>
 
-          {/* Mobile y tablet (< lg): datos apilados con una línea entre cada uno. Desde lg: en fila */}
-          <section className={`${CARD} flex flex-col divide-y divide-gray-200 dark:divide-slate-800 lg:flex-row lg:flex-wrap lg:gap-x-12 lg:gap-y-4 lg:divide-y-0`}>
-            <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
-              <span className={labelClass}>Inicio</span>
-              <span className="text-[22px] font-bold tabular-nums">
-                {lote.inicio ? (
-                  <Chip tipo="inicio" grande>{fechaCorta(lote.inicio)}</Chip>
-                ) : (
-                  '—'
-                )}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
-              <span className={labelClass}>Fin</span>
-              <span className="text-[22px] font-bold tabular-nums">
-                {lote.fin ? <Chip tipo="fin" grande>{fechaCorta(lote.fin)}</Chip> : '—'}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
-              <span className={labelClass}>Tiempo total</span>
-              <span className="text-[22px] font-bold tabular-nums">
-                <FontAwesomeIcon icon={faClock} className="mr-2 text-[18px] text-gray-400 dark:text-slate-500" />
-                {mmss(lote.tiempo_total_s)}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
-              <span className={labelClass}>Origen de los valores</span>
-              <span className="text-[22px] font-bold">
-                {lote.fuente === 'plc' ? 'Etiqueta del PLC' : 'Telemetría'}
-              </span>
-            </div>
-          </section>
+          {/* Card de datos (inicio, fin, tiempo, origen) y, al lado, card de acciones (switch y PDF).
+              Mobile y tablet (< lg): una debajo de la otra */}
+          <div className="flex flex-col gap-4 lg:flex-row">
+            {/* Mobile y tablet (< lg): datos apilados con una línea entre cada uno. Desde lg: en fila */}
+            <section className={`${CARD} flex flex-col divide-y divide-gray-200 dark:divide-slate-800 lg:flex-1 lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-12 lg:gap-y-4 lg:divide-y-0`}>
+              <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
+                <span className={labelClass}>Inicio</span>
+                <span className="text-[22px] font-bold tabular-nums">
+                  {lote.inicio ? (
+                    <Chip tipo="inicio" grande>{fechaCorta(lote.inicio)}</Chip>
+                  ) : (
+                    '—'
+                  )}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
+                <span className={labelClass}>Fin</span>
+                <span className="text-[22px] font-bold tabular-nums">
+                  {lote.fin ? <Chip tipo="fin" grande>{fechaCorta(lote.fin)}</Chip> : '—'}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
+                <span className={labelClass}>Tiempo total</span>
+                <span className="text-[22px] font-bold tabular-nums">
+                  <FontAwesomeIcon icon={faClock} className="mr-2 text-[18px] text-gray-400 dark:text-slate-500" />
+                  {mmss(lote.tiempo_total_s)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
+                <span className={labelClass}>Origen de los valores</span>
+                <span className="text-[22px] font-bold">
+                  {lote.fuente === 'plc' ? 'Etiqueta del PLC' : 'Telemetría'}
+                </span>
+              </div>
+            </section>
+
+            {/* Acciones: switch de aprobación (solo admin) y descarga de la receta en PDF */}
+            <section
+              aria-label="Acciones del lote"
+              className={`${CARD} flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:flex-none`}
+            >
+              {esAdmin && <SwitchAprobar lote={lote} onAprobar={onAprobar} conTexto />}
+              {/* Botón sólido con el rojo de Acrobat (PDF), con la forma de los demás botones de la app */}
+              <button
+                type="button"
+                onClick={descargarPdf}
+                disabled={generandoPdf}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-[#b30b00] px-[18px] py-1.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-[#d4120a] disabled:cursor-wait disabled:opacity-60"
+              >
+                <FontAwesomeIcon icon={faFilePdf} aria-hidden="true" />
+                {generandoPdf ? 'Generando…' : 'Descargar receta PDF'}
+              </button>
+            </section>
+          </div>
 
           <section
             aria-label="Receta y elaboración"
             className={`${CARD} flex flex-col gap-2.5`}
           >
-            <span className={labelClass}>Receta y elaboración</span>
+            <span className={`${labelClass} flex items-center gap-2`}>
+              <FontAwesomeIcon icon={faFlask} aria-hidden="true" />
+              Receta y elaboración
+            </span>
 
             <div className="overflow-x-auto">
               <table className="w-full" style={{ minWidth: 640 }}>
@@ -213,19 +245,6 @@ export default function EtiquetaDigital() {
                   })}
                 </tbody>
               </table>
-            </div>
-
-            {/* Mismo estilo que los badges (Chip "mal"): fondo rojo suave, borde y texto rojos */}
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={descargarPdf}
-                disabled={generandoPdf}
-                className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-current bg-red-500/15 px-3 py-1 text-[14px] font-semibold text-red-700 transition-colors hover:bg-red-500/25 disabled:cursor-wait disabled:opacity-60 dark:bg-red-400/15 dark:text-red-300 dark:hover:bg-red-400/25"
-              >
-                <FontAwesomeIcon icon={faFilePdf} aria-hidden="true" />
-                {generandoPdf ? 'Generando…' : 'Descargar receta PDF'}
-              </button>
             </div>
 
             <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">

@@ -32,12 +32,22 @@ export async function descargarRecetaPdf(lote, etapas = []) {
   // Datos del lote
   const datos = [
     ['Código de barras', String(lote.codigo_barra ?? '—')],
-    ['Estado', lote.estado === 'completa' ? 'Completa' : 'Incompleta'],
+    [
+      'Estado',
+      lote.estado === 'aprobado'
+        ? `Aprobado por calidad${lote.calidad?.usuario ? ` (${lote.calidad.usuario})` : ''}`
+        : lote.estado === 'rechazado'
+          ? `Rechazado por calidad${lote.calidad?.usuario ? ` (${lote.calidad.usuario})` : ''}`
+          : lote.estado === 'completa'
+          ? 'Completa'
+          : 'Incompleta',
+    ],
     ['Inicio', lote.inicio ? fechaCorta(lote.inicio) : '—'],
     ['Fin', lote.fin ? fechaCorta(lote.fin) : '—'],
     ['Tiempo total', mmss(lote.tiempo_total_s)],
     ['Origen de los valores', lote.fuente === 'plc' ? 'Etiqueta del PLC' : 'Telemetría'],
   ];
+  if (lote.calidad?.comentario) datos.push(['Comentario de calidad', lote.calidad.comentario]);
 
   autoTable(doc, {
     startY: 33,

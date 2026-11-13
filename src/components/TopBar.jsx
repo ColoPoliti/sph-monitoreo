@@ -3,6 +3,7 @@ import { useTituloVista } from '../lib/useTituloVista';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
 import SaphirusLogo from './SaphirusLogo';
+import SesionMenu from './SesionMenu';
 import ThemeToggle from './ThemeToggle';
 
 export default function TopBar({ menuOpen, onToggleMenu }) {
@@ -35,7 +36,7 @@ export default function TopBar({ menuOpen, onToggleMenu }) {
 
       {/* Título de la vista/sala seleccionada dentro de un badge (oculto en mobile para dejar el logo centrado) */}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <span className="hidden min-w-0 items-center rounded-full sm:inline-flex border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-md dark:shadow-none px-3 py-1.5 sm:px-4">
+        <span className="hidden min-w-0 items-center rounded-lg sm:inline-flex border border-gray-300 bg-white text-gray-900 shadow-md dark:border-white dark:shadow-none px-3 py-1.5 sm:px-4">
           <span className="truncate text-[13px] font-extrabold leading-tight sm:text-[15px]">
             {titulo}
           </span>
@@ -44,6 +45,9 @@ export default function TopBar({ menuOpen, onToggleMenu }) {
           {sub}
         </span>
       </div>
+
+      {/* Iniciar sesión; con sesión: usuario + menú de 3 puntos (otras credenciales / cerrar sesión) */}
+      <SesionMenu />
 
       <ThemeToggle />
     </header>
