@@ -86,7 +86,7 @@ function Contenido({ onCerrar }) {
           onClick={onCerrar}
           aria-label="Cerrar"
           title="Cerrar"
-          className="absolute right-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+          className="absolute right-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-xl text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
         </button>

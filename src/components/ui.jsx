@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import AnimatedCounter from './AnimatedCounter';
+import AnimatedCounter from '../components/AnimatedCounter';
 // Colores, textos e íconos de los chips: en lib/estados.js (también los usan los modales de calidad)
 import { CHIP_ESTADO, CHIP_VARIANTS, estadoChip, etapaChip } from '../lib/estados';
 
@@ -17,7 +17,7 @@ export function Chip({
   children,
 }) {
   // grande: alto total (31px) dentro del renglón de un texto de 22px, para no desalinear
-  const tam = grande ? 'px-2 text-[18px] font-bold leading-[29px] align-middle' :'px-2.5 py-[3px] text-[13px] font-semibold';
+  const tam = grande ? 'px-2 text-[18px] font-bold leading-[29px] align-middle' :'px-2.5 py-[3px] text-[14px] font-semibold';
   return (
     <span
       className={`inline-block rounded-md border border-current ${tam} ${CHIP_VARIANTS[tipo]} ${
@@ -64,8 +64,8 @@ export function SwitchAprobar({ lote, onAprobar, deshabilitado = false, conTexto
       {conTexto && (
         <span
           aria-hidden="true"
-          className={`w-[68px] text-left text-[13px] font-bold ${
-            aprobado ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-slate-400'
+          className={`w-[76px] text-left text-[14px] font-bold ${
+            aprobado ? 'text-teal-600 dark:text-teal-400' : 'text-gray-600 dark:text-slate-300'
           }`}
         >
           {aprobado ? 'Aprobado' : 'Aprobar'}
@@ -105,11 +105,11 @@ export function ProgressPill({ valor, listo }) {
         }`}
         style={{ width: `${ancho}%` }}
       />
-      <span className="relative text-[13px] font-bold"><AnimatedCounter value={ancho} decimals={0} /> %</span>
+      <span className="relative text-[14px] font-bold"><AnimatedCounter value={ancho} decimals={0} /> %</span>
     </div>
   );
 }
 
 export const labelClass =
-  'text-[12px] font-extrabold uppercase tracking-[1.6px] text-gray-500 dark:text-slate-400';
-export const subClass = 'text-[15px] font-medium text-gray-500 dark:text-slate-400';
+  'text-[13px] font-extrabold uppercase tracking-[1.6px] text-gray-600 dark:text-slate-300';
+export const subClass = 'text-[15px] font-medium text-gray-600 dark:text-slate-300';

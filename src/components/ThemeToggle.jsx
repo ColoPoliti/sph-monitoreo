@@ -6,7 +6,8 @@ import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
   const esClaro = theme === 'light';
-  const texto = esClaro ? 'Modo claro' : 'Modo oscuro';
+  // Modo al que se pasa al hacer clic (para el tooltip y lectores de pantalla)
+  const texto = esClaro ? 'Modo oscuro' : 'Modo claro';
 
   return (
     <motion.button
@@ -16,7 +17,7 @@ export default function ThemeToggle() {
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
       aria-label={`Cambiar a ${texto.toLowerCase()}`}
       title={`Cambiar a ${texto.toLowerCase()}`}
-      className="flex h-10 flex-none cursor-pointer items-center gap-2 rounded-[10px] border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-semibold text-gray-900 dark:text-white transition-colors hover:bg-gray-100 dark:hover:bg-slate-700"
+      className="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white transition-colors hover:bg-gray-100 dark:hover:bg-slate-700"
     >
       <span className="relative flex h-5 w-5 items-center justify-center overflow-hidden" aria-hidden="true">
         {/* Sin mode="wait": el ícono que sale y el que entra se animan a la vez (superpuestos) */}
@@ -36,7 +37,6 @@ export default function ThemeToggle() {
           </motion.span>
         </AnimatePresence>
       </span>
-      <span className="hidden sm:inline">{texto}</span>
     </motion.button>
   );
 }

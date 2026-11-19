@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTituloVista } from '../lib/useTituloVista';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
+import Reloj from './Reloj';
 import SaphirusLogo from './SaphirusLogo';
 import SesionMenu from './SesionMenu';
 import ThemeToggle from './ThemeToggle';
@@ -10,12 +11,12 @@ export default function TopBar({ menuOpen, onToggleMenu }) {
   const { titulo, sub } = useTituloVista();
 
   return (
-    <header className="flex h-[72px] flex-none items-center gap-2.5 relative z-10 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-md dark:shadow-none px-4 sm:gap-4 sm:px-6">
+    <header className="textura-fondo flex h-[72px] flex-none items-center gap-2.5 relative z-10 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 sm:gap-4 sm:px-6">
       {/* Mobile: hamburguesa que abre/cierra el menú de salas (en escritorio se maneja desde el propio menú) */}
       <button
         type="button"
         onClick={onToggleMenu}
-        aria-controls="menu-salas"
+        aria-controls="menu-lateral"
         aria-expanded={menuOpen}
         aria-label={menuOpen ? 'Cerrar menú de salas' : 'Abrir menú de salas'}
         className="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded-[10px] text-gray-900 transition-colors hover:bg-gray-100 dark:text-white dark:hover:bg-slate-800 lg:hidden"
@@ -37,14 +38,17 @@ export default function TopBar({ menuOpen, onToggleMenu }) {
       {/* Título de la vista/sala seleccionada dentro de un badge (oculto en mobile para dejar el logo centrado) */}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <span className="hidden min-w-0 items-center rounded-lg sm:inline-flex border border-gray-300 bg-white text-gray-900 shadow-md dark:border-white dark:shadow-none px-3 py-1.5 sm:px-4">
-          <span className="truncate text-[13px] font-extrabold leading-tight sm:text-[15px]">
+          <span className="truncate text-[14px] font-extrabold leading-tight sm:text-[15px]">
             {titulo}
           </span>
         </span>
-        <span className="hidden truncate text-[12px] font-medium text-gray-500 dark:text-slate-400 md:inline">
+        <span className="hidden truncate text-[13px] font-medium text-gray-600 dark:text-slate-300 2xl:inline">
           {sub}
         </span>
       </div>
+
+      {/* Oculto en mobile: la barra ya va justa con el logo centrado */}
+      <Reloj className="hidden sm:flex" />
 
       {/* Iniciar sesión; con sesión: usuario + menú de 3 puntos (otras credenciales / cerrar sesión) */}
       <SesionMenu />

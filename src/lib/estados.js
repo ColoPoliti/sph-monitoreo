@@ -24,7 +24,7 @@ export const CHIP_VARIANTS = {
 };
 
 // Clases base de un chip de tamaño normal
-export const CHIP_BASE = 'inline-block rounded-md border border-current px-2.5 py-[3px] text-[13px] font-semibold';
+export const CHIP_BASE = 'inline-block rounded-md border border-current px-2.5 py-[3px] text-[14px] font-semibold';
 
 // Chips de estado: en mayúsculas
 export const CHIP_ESTADO = 'uppercase tracking-[0.4px]';

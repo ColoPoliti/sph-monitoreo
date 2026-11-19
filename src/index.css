@@ -1,9 +1,37 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Textura de grano fino (solo en modo oscuro), sobre el color de fondo de cada zona (sin cambiar el color):
+ * body + header, menú lateral, solapas, contenido y barra de estado (clase .textura-fondo).
+ * Es ruido en gris neutro generado con un SVG (feTurbulence), con poca opacidad y repetido en mosaico.
+ * El color sigue siendo el de Tailwind (background-color); esto solo agrega una imagen encima.
+ * Para hacerlo más o menos visible, cambiar el valor de opacity='…'.
+ */
+html.dark body,
+html.dark .textura-fondo {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+
+@layer utilities {
+  /* Scroll sin barra visible (solapas de módulos) */
+  .sin-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .sin-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Códigos (barras, lotes, MP, tolvas): cero con barra y variantes que distinguen I, l y 1 */
+  .codigo {
+    font-feature-settings: 'zero', 'ss02', 'tnum';
+  }
+}
 
 @layer base {
   /* Barras de scroll y controles nativos acordes al tema elegido */

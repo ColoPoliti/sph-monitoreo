@@ -4,6 +4,7 @@ import {
   faBarcode,
   faChartLine,
   faCircleInfo,
+  faClock,
   faClockRotateLeft,
   faFlask,
   faListOl,
@@ -20,7 +21,9 @@ import { getUltimas } from '../lib/api';
 import { clamp, codigoMP, fmt, mmss, num } from '../lib/format';
 import { enEspera, enLinea, nombreEtapa, unidadEtapa } from '../lib/rooms';
 
-const CARD = 'rounded-[14px] bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+// Rótulo de las barras de válvula y peso cargado
+const ROTULO_BARRA = 'whitespace-nowrap text-[11px] font-light uppercase tracking-[0.6px] text-gray-600 dark:text-slate-300';
 
 export default function Dashboard() {
   const { selectedRoom: s, now, lotesVersion } = useMonitor();
@@ -64,7 +67,7 @@ export default function Dashboard() {
   }, [areaKey, plc, lotesVersion]);
 
   if (!s) {
-    return <p className="text-gray-500 dark:text-slate-400">Cargando salas…</p>;
+    return <p className="text-gray-600 dark:text-slate-300">Cargando salas…</p>;
   }
 
   const r = s.receta;
@@ -110,13 +113,15 @@ export default function Dashboard() {
 
   const cur = activo ? s.etapa : -1;
   const trabajando = activo && s.etapa < 6; // preparando, dosificando o etiqueta y agitado
+  const enEtapa = activo && s.etapa <= 5; // hay una etapa corriendo: se muestra su número y su tiempo
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* Encabezado del producto */}
       {/* Small y medium (< lg): producto arriba, línea divisoria y código de barras debajo. Desktop (lg): lado a lado */}
-      {/* Borde izquierdo grueso con el verde del botón "Historial de elaboraciones" */}
-      <section className={`${CARD} flex flex-col gap-3 border-l-[6px] border-teal-600 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
+      <section className={`${CARD} relative flex flex-col gap-3 overflow-hidden lg:flex-row lg:items-center lg:justify-between lg:gap-x-6`}>
+        {/* Borde izquierdo con el degradé de marca */}
+        <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-teal-600 to-violet-600" aria-hidden="true" />
         <div className="flex min-w-0 flex-col gap-1.5 lg:flex-1">
           <h1 className="m-0 sm:text-4xl font-extrabold leading-[1.15] [overflow-wrap:anywhere] text-xl">
             {r ? String(r.producto?.nombre || '').toUpperCase() : 'SIN LOTE'}
@@ -132,13 +137,13 @@ export default function Dashboard() {
             <FontAwesomeIcon icon={faBarcode} aria-hidden="true" />
             Código de barras
           </span>
-          <span className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300 sm:text-[28px]">
+          <span className="codigo text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300 sm:text-[28px]">
             {r ? r.codigo_barra : '-'}
           </span>
         </div>
       </section>
 
-      <div className="flex flex-wrap items-stretch gap-4">
+      <div className="flex flex-wrap items-stretch gap-6">
         {/* Etapa y peso */}
         <section
           aria-label="Etapa y peso"
@@ -147,7 +152,7 @@ export default function Dashboard() {
           <div className="flex min-w-0 flex-1 basis-[280px] flex-col gap-2">
             <span className={`${labelClass} flex items-center gap-2`}>
               <FontAwesomeIcon icon={faListOl} aria-hidden="true" />
-              Etapa
+              {enEtapa ? `Etapa ${s.etapa + 1} de ${s.area.etapas.length}` : 'Etapa'}
             </span>
             <span
               className={`text-lg font-bold leading-[1.1] sm:text-[40px] ${
@@ -156,11 +161,6 @@ export default function Dashboard() {
             >
               {etapaTxt}
             </span>
-            <span className={`${subClass} min-h-[22px]`}>
-              {activo && s.etapa <= 5
-                ? `Etapa ${s.etapa + 1} de ${s.area.etapas.length}  ·  ${mmss((now - s.etapaIni) / 1000)}`
-                : ''}
-            </span>
             <span className={`${labelClass} mt-1.5 flex items-center gap-2`}>
               <FontAwesomeIcon icon={faWeightScale} aria-hidden="true" />
               Peso de la balanza
@@ -168,7 +168,7 @@ export default function Dashboard() {
             <span className="text-5xl font-bold leading-[1.05] tabular-nums sm:text-[76px]">
               <AnimatedCounter value={on ? s.peso : 0} /> {unidad}
             </span>
-            <span className="text-[22px] font-medium text-gray-500 dark:text-slate-400">
+            <span className="text-[22px] font-medium text-gray-600 dark:text-slate-300">
               {on && s.sp > 0 ? (
                 <>
                   SP <AnimatedCounter value={s.sp} /> {unidad}
@@ -180,7 +180,7 @@ export default function Dashboard() {
             {/* Estado: trabajando = punto violeta + texto (claro: oscuro, oscuro: blanco) con pulse sutil;
                 desconectado = punto rojo con pulse; en espera/finalizado = punto gris quieto */}
             <span
-              className={`mt-2.5 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white ${
+              className={`mt-auto flex items-center gap-2 pt-2.5 text-sm font-bold text-gray-900 dark:text-white ${
                 trabajando ? 'animate-pulse motion-reduce:animate-none' : ''
               }`}
             >
@@ -214,27 +214,54 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex flex-none gap-4">
+          {/* En celular el panel de etapa sube al principio de la card; desde tablet va arriba de las barras */}
+          <div className="contents sm:flex sm:flex-none sm:flex-col sm:gap-4">
+            <div className="order-first flex basis-full flex-col items-center gap-2 sm:order-none sm:basis-auto">
+              {/* Desde tablet, el tiempo queda a la altura del nombre de la etapa:
+                  rótulo invisible igual al de la izquierda y fila del mismo alto que el nombre (40 px × 1,1) */}
+              <span className={`${labelClass} hidden sm:invisible sm:block`} aria-hidden="true">Etapa</span>
+              <div className="flex items-center sm:h-[44px]">
+              {/* Mismo ancho que las dos barras: de su borde izquierdo al derecho */}
+              <div className="flex w-[168px] items-center justify-center rounded-lg border border-violet-500 bg-violet-100 px-2 py-1 shadow-sm backdrop-blur-md dark:border-white dark:bg-white/20 dark:shadow-none">
+                <span
+                  className={`flex items-center gap-1.5 whitespace-nowrap text-[15px] font-bold leading-tight tabular-nums ${
+                    enEtapa ? 'text-violet-800 dark:text-white' : 'text-gray-700 dark:text-slate-200'
+                  }`}
+                >
+                  <FontAwesomeIcon icon={faClock} className="text-[12px]" aria-hidden="true" />
+                  <span className="sr-only">Tiempo de la etapa: </span>
+                  {enEtapa ? mmss((now - s.etapaIni) / 1000) : '--:--'}
+                </span>
+              </div>
+              </div>
+            </div>
+
+            {/* Barras de válvula y peso cargado: desde tablet crecen y sus porcentajes quedan a la altura
+                del estado ("Dosificando"). Los 15 px de abajo son los que ocupa la barra de progreso. */}
+            <div className="flex basis-full justify-center sm:flex-1 sm:basis-auto sm:pb-[15px]">
+            <div className="grid w-[216px] flex-none grid-cols-2 gap-2">
             <div className="flex flex-col items-center gap-2">
-              <span className={labelClass}>Válvula</span>
-              <div className="relative h-48 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-[256px]">
+              <span className={ROTULO_BARRA}>Válvula</span>
+              <div className="relative h-32 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-auto sm:min-h-[168px] sm:flex-1">
                 <div
                   className="absolute inset-x-0 bottom-0 rounded-md bg-violet-600 dark:bg-violet-500"
                   style={{ height: `${valv}%` }}
                 />
               </div>
-              <span className="text-xl font-bold"><AnimatedCounter value={valv} decimals={0} /> %</span>
+              <span className="text-base font-bold sm:text-xl sm:leading-5"><AnimatedCounter value={valv} decimals={0} /> %</span>
             </div>
 
             <div className="flex flex-col items-center gap-2">
-              <span className={labelClass}>Peso cargado</span>
-              <div className="relative h-48 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-[256px]">
+              <span className={ROTULO_BARRA}>Peso cargado</span>
+              <div className="relative h-32 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-auto sm:min-h-[168px] sm:flex-1">
                 <div
                   className="absolute inset-x-0 bottom-0 rounded-md bg-teal-600 dark:bg-teal-400"
                   style={{ height: `${carg}%` }}
                 />
               </div>
-              <span className="text-xl font-bold"><AnimatedCounter value={carg} decimals={0} /> %</span>
+              <span className="text-base font-bold sm:text-xl sm:leading-5"><AnimatedCounter value={carg} decimals={0} /> %</span>
+            </div>
+            </div>
             </div>
           </div>
         </section>
@@ -256,12 +283,12 @@ export default function Dashboard() {
                 <caption className="sr-only">Receta de la elaboración en curso</caption>
                 <thead>
                   <tr>
-                    <th scope="col" className="px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400">Estado</th>
-                    <th scope="col" className="px-1.5 py-2 text-left text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400">Insumo</th>
-                    <th scope="col" className="px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400">SP</th>
-                    <th scope="col" className="px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400">Cargado</th>
-                    <th scope="col" className="px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400">Falta</th>
-                    <th scope="col" className="px-1.5 py-2 text-[12px] font-bold uppercase tracking-[0.8px] text-gray-500 dark:text-slate-400">Avance</th>
+                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Estado</th>
+                    <th scope="col" className="px-1.5 py-2 text-left text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Insumo</th>
+                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">SP</th>
+                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Cargado</th>
+                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Falta</th>
+                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Avance</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,7 +327,7 @@ export default function Dashboard() {
                             <td className="px-1.5 py-2 text-[15px] font-medium">
                               {String(ins.nombre || '').toUpperCase()}
                               <br />
-                              <span className="text-[13px] text-gray-500 dark:text-slate-400">
+                              <span className="codigo text-[14px] text-gray-600 dark:text-slate-300">
                                 {codigoMP(ins.codigo_mp)}
                               </span>
                             </td>
@@ -339,7 +366,7 @@ export default function Dashboard() {
 
           {/* Sin receta: aviso con ícono, centrado en alto y ancho de la card */}
           {!r && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center text-[15px] font-medium text-gray-500 dark:text-slate-400">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center text-[15px] font-medium text-gray-600 dark:text-slate-300">
               <FontAwesomeIcon icon={faTriangleExclamation} className="text-3xl" aria-hidden="true" />
               <span>Sin receta: todavía no se consultó ningún código de barras.</span>
             </div>
@@ -371,13 +398,13 @@ export default function Dashboard() {
           </span>
         </div>
         {/* La tabla solo se muestra cuando hay elaboraciones */}
-        {ultimas.length > 0 && <LotesTable filas={ultimas} minWidth={600} />}
+        {ultimas.length > 0 && <LotesTable filas={ultimas} minWidth={600} compacta />}
 
         {/* Sin datos (o error al consultar): aviso con ícono, centrado en la card */}
         {ultimas.length === 0 && avisoUlt.texto && (
           <div
             className={`flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center text-[15px] font-medium ${
-              avisoUlt.error ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-slate-400'
+              avisoUlt.error ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-slate-300'
             }`}
           >
             <FontAwesomeIcon icon={faTriangleExclamation} className="text-3xl" aria-hidden="true" />
@@ -386,7 +413,7 @@ export default function Dashboard() {
         )}
 
         {/* Nota de info al pie de la card (mismo estilo que las de la etiqueta digital) */}
-        <p className="m-0 flex items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
+        <p className="m-0 flex items-start gap-2 text-[15px] font-normal text-gray-600 dark:text-slate-300">
           <FontAwesomeIcon
             icon={faCircleInfo}
             className="mt-[3px] flex-none text-violet-600 dark:text-violet-400"

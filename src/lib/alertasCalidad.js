@@ -13,7 +13,7 @@ const CLASES = {
   popup: '!rounded-[14px] !bg-white !text-gray-900 dark:!bg-slate-900 dark:!text-white',
   title: '!text-xl !font-extrabold !text-gray-900 dark:!text-white',
   htmlContainer: '!text-[15px] !text-gray-600 dark:!text-slate-300',
-  inputLabel: '!text-[13px] !font-bold !text-gray-600 dark:!text-slate-300',
+  inputLabel: '!text-[14px] !font-bold !text-gray-600 dark:!text-slate-300',
   input:
     '!rounded-lg !border !border-gray-300 !bg-white !text-[15px] !text-gray-900 dark:!border-slate-700 dark:!bg-slate-950 dark:!text-white',
   actions: '!gap-y-2',
@@ -84,7 +84,7 @@ export async function preguntarDecision(fila) {
   const motivo = fila.calidad?.comentario;
   const avisoRechazo = yaRechazado
     ? `<div class="mt-3 rounded-md border border-current bg-red-500/15 px-3 py-2 text-left text-red-700 dark:bg-red-400/15 dark:text-red-300">
-        <div class="text-[13px] font-bold uppercase tracking-[0.6px]">Rechazado por calidad</div>
+        <div class="text-[14px] font-bold uppercase tracking-[0.6px]">Rechazado por calidad</div>
         ${motivo ? `<div class="whitespace-pre-wrap">${esc(motivo)}</div>` : ''}
       </div>`
     : '';
@@ -165,7 +165,7 @@ export function mostrarInfoLote(fila) {
     .map(
       ([k, v]) =>
         `<tr class="border-t border-gray-200 dark:border-slate-800">
-          <th class="py-2 pr-3 text-left align-top text-[13px] font-bold uppercase tracking-[0.6px] text-gray-500 dark:text-slate-400">${esc(k)}</th>
+          <th class="py-2 pr-3 text-left align-top text-[14px] font-bold uppercase tracking-[0.6px] text-gray-600 dark:text-slate-300">${esc(k)}</th>
           <td class="py-2 text-left font-semibold text-gray-900 dark:text-white">${v && v.html ? v.html : esc(v)}</td>
         </tr>`,
     )
@@ -173,7 +173,7 @@ export function mostrarInfoLote(fila) {
 
   const comentario = cal?.comentario
     ? `<div class="mt-3 rounded-md border border-current bg-red-500/15 px-3 py-2 text-left text-[16px] text-red-700 dark:bg-red-400/15 dark:text-red-300">
-        <div class="text-[13px] font-bold uppercase tracking-[0.6px]">Comentario</div>
+        <div class="text-[14px] font-bold uppercase tracking-[0.6px]">Comentario</div>
         <div class="whitespace-pre-wrap">${esc(cal.comentario)}</div>
       </div>`
     : '';
@@ -187,7 +187,7 @@ export function mostrarInfoLote(fila) {
       confirmButton: CLASES.cancelButton,
       // X para cerrar arriba a la derecha
       closeButton:
-        '!text-4xl !text-gray-500 hover:!text-gray-900 focus:!shadow-none dark:!text-slate-400 dark:hover:!text-white',
+        '!text-4xl !text-gray-600 hover:!text-gray-900 focus:!shadow-none dark:!text-slate-400 dark:hover:!text-white',
     },
     width: 520,
     showCloseButton: true,

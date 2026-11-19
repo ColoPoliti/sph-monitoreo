@@ -39,7 +39,7 @@ export default function Layout() {
           onToggle={() => setMenuOpen((v) => !v)}
         />
 
-        <main className="h-full min-w-0 flex-1 overflow-y-auto bg-slate-200 p-4 dark:bg-slate-950">
+        <main className="textura-fondo h-full min-w-0 flex-1 overflow-y-auto bg-slate-200 p-4 sm:p-6 dark:bg-slate-950">
           {/* Mobile: nombre de la vista/sala en un badge arriba del contenido (en el TopBar se oculta para centrar el logo) */}
           <div className="mb-3 flex sm:hidden">
             <span className="inline-flex min-w-0 items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-gray-900 shadow-md dark:border-white dark:shadow-none">

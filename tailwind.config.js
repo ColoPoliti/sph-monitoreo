@@ -28,8 +28,7 @@ module.exports = {
         'toast-out': 'toast-out 0.25s ease-in both',
       },
       fontFamily: {
-        sans: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        montserrat: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['InterVariable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },

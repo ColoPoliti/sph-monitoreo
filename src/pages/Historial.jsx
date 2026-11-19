@@ -15,9 +15,7 @@ import { mostrarInfoLote } from '../lib/alertasCalidad';
 import { hoyISO } from '../lib/format';
 import { useAprobacionCalidad } from '../lib/useAprobacionCalidad';
 
-const CARD = 'rounded-[14px] bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
-// Card de filtros: igual que CARD pero con esquinas rectas
-const CARD_RECTA = CARD.replace('rounded-[14px]', 'rounded-none');
+const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
 
 const inicial = () => ({
   sector: 'todos',
@@ -112,18 +110,18 @@ export default function Historial() {
   // Resumen del pie de la tabla: cantidad por estado, con un círculo del color de su chip
   const conteos = [
     { texto: 'completas', n: completas, punto: 'bg-emerald-500 dark:bg-emerald-400' },
-    { texto: 'incompletas', n: incompletas, punto: 'bg-amber-500 dark:bg-amber-400' },
+    { texto: 'incompletas', n: incompletas, punto: 'bg-yellow-500 dark:bg-yellow-400' },
     // Siempre visibles (con o sin sesión), aunque sean 0
     { texto: 'aprobadas por calidad', n: aprobadas, punto: 'bg-sky-500 dark:bg-sky-400' },
     { texto: 'rechazadas por calidad', n: rechazadas, punto: 'bg-red-500 dark:bg-red-400' },
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <form
         onSubmit={filtrar}
         aria-label="Filtros"
-        className={`${CARD_RECTA} flex flex-wrap items-end gap-x-[18px] gap-y-3.5`}
+        className={`${CARD} flex flex-wrap items-end gap-x-[18px] gap-y-3.5`}
       >
         {/* Acordeón: el título abre o cierra los filtros; la flechita gira */}
         <button
@@ -229,7 +227,7 @@ export default function Historial() {
             </div>
 
             {/* Nota de info al pie de la card (mismo estilo que las de la etiqueta digital) */}
-            <p className="m-0 flex basis-full items-start gap-2 text-[15px] font-light text-gray-500 dark:text-slate-400">
+            <p className="m-0 flex basis-full items-start gap-2 text-[15px] font-normal text-gray-600 dark:text-slate-300">
               <FontAwesomeIcon
                 icon={faCircleInfo}
                 className="mt-[3px] flex-none text-violet-600 dark:text-violet-400"
@@ -262,11 +260,12 @@ export default function Historial() {
           minWidth={esAdmin ? 880 : 720}
           onAprobar={esAdmin ? onAprobar : undefined}
           onInfo={esAdmin ? mostrarInfoLote : undefined}
+          exportar="historial-elaboraciones.csv"
         />
 
         <span
           className={`text-sm font-medium ${
-            aviso.error ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-slate-400'
+            aviso.error ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-slate-300'
           }`}
         >
           {aviso.texto}
@@ -287,7 +286,7 @@ export default function Historial() {
               </span>
             ))}
             {filas.length >= 500 && (
-              <span className="text-gray-500 dark:text-slate-400">(se muestran las 500 más recientes)</span>
+              <span className="text-gray-600 dark:text-slate-300">(se muestran las 500 más recientes)</span>
             )}
           </footer>
         )}
