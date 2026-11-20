@@ -5,11 +5,12 @@
 // dónde se guardan usuario y contraseña (ej.: un login.php contra la base),
 // reemplazar SOLO el cuerpo de validarCredenciales por esa consulta
 // (debe devolver el perfil: 'admin' | 'usuario', o null si no coincide).
-// Mientras tanto se toman de .env.local y, si no están definidas:
-//   administrador -> admin / admin        (VITE_ADMIN_USER / VITE_ADMIN_PASS)
-//   usuario común -> usuario / usuario    (VITE_USER_USER / VITE_USER_PASS)
+// Mientras tanto se toman de config.env / .env.local y, si no están definidas:
+//   administrador -> admin / admin        (ADMIN_USER / ADMIN_PASS)
+//   usuario común -> usuario / usuario    (USUARIO_USER / USUARIO_PASS; también acepta USER_USER / USER_PASS)
 
 import { useSyncExternalStore } from 'react';
+import { env } from './entorno';
 
 const CLAVE_SESION = 'sph-admin';
 
@@ -20,10 +21,13 @@ export const ROLES = {
 
 export async function validarCredenciales(usuario, clave) {
   const u = usuario.trim();
-  const env = import.meta.env;
   const cuentas = [
-    { usuario: env.VITE_ADMIN_USER || 'admin', clave: env.VITE_ADMIN_PASS || 'admin', rol: 'admin' },
-    { usuario: env.VITE_USER_USER || 'usuario', clave: env.VITE_USER_PASS || 'usuario', rol: 'usuario' },
+    { usuario: env('ADMIN_USER', 'admin'), clave: env('ADMIN_PASS', 'admin'), rol: 'admin' },
+    {
+      usuario: env('USUARIO_USER', env('USER_USER', 'usuario')),
+      clave: env('USUARIO_PASS', env('USER_PASS', 'usuario')),
+      rol: 'usuario',
+    },
   ];
   return cuentas.find((c) => c.usuario === u && c.clave === clave)?.rol || null;
 }

@@ -46,18 +46,29 @@ npm run preview
 
 ## Configuración
 
-Los valores por defecto están en `src/config/monitor.js`. Se pueden sobrescribir
-con variables de entorno de Vite (crear `.env.local`):
+Los parámetros del broker y de la API se gestionan con un archivo tipo `.env`,
+con esta prioridad (gana el primero que tenga valor):
 
-```env
-VITE_MQTT_URL=wss://mqtt.ejemplo.com
-VITE_MQTT_USER=web_lectura
-VITE_MQTT_PASS=admin.sph
-VITE_BROKER_ETIQUETA=mqtt.ejemplo.com
-VITE_API_BASE=/api
-```
+1. **`config.env`** en la raíz del sitio (`public/config.env` → `dist/config.env`).
+   Se edita **en el servidor**, sin recompilar; se aplica al recargar la página (F5).
+2. **`.env.local`** (variables `VITE_*`), grabadas al compilar. Uso en desarrollo
+   (copiar `.env.example` como `.env.local`).
+3. **Valores por defecto** de `src/config/monitor.js` (los de la instalación actual en planta).
 
-Además, en ese archivo se configuran:
+| Clave | Por defecto | Para qué |
+| --- | --- | --- |
+| `MQTT_URL` | `ws://10.200.1.243:9001` | Broker MQTT por WebSocket (`wss://dominio/mqtt` si el sitio es HTTPS) |
+| `MQTT_USER` / `MQTT_PASS` | `web_lectura` / (la actual) | Usuario MQTT de **solo lectura** |
+| `BROKER_ETIQUETA` | `10.200.1.243` | Texto de la barra de estado |
+| `API_BASE` | `/api` | Ruta (o URL) de la API PHP de lotes |
+| `ADMIN_USER` / `ADMIN_PASS` | `admin` / `admin` | Login provisorio de Calidad (aprueba/rechaza) |
+| `USUARIO_USER` / `USUARIO_PASS` | `usuario` / `usuario` | Login provisorio de consulta (acepta también `USER_USER` / `USER_PASS`) |
+| `API_DESTINO` | `http://10.200.1.243:8080` | Solo `.env.local`: destino del proxy `/api` de Vite en desarrollo |
+
+La lectura la hace `src/lib/entorno.js` antes de arrancar la app (`main.jsx`).
+Si `config.env` no está en el servidor, la app funciona igual con los valores compilados.
+
+En `src/config/monitor.js` (requieren recompilar) se configuran además:
 
 - `SEGUNDOS_SIN_CONEXION`: segundos sin telemetría para considerar el PLC caído.
 - `VENTANA_GRAFICO_S`: ventana del gráfico.
@@ -66,8 +77,8 @@ Además, en ese archivo se configuran:
 - `TOLERANCIA_PCT`: tolerancia para marcar un insumo como “Fuera”.
 - `AREAS`: salas, PLCs, nombres de etapas y unidades especiales.
 
-> El usuario MQTT debe ser de **solo lectura**. Cualquiera que abra la página puede
-> ver estas credenciales.
+> `config.env` y el código compilado se descargan en el navegador: cualquiera que abra
+> la página puede ver estas credenciales. El usuario MQTT debe ser de **solo lectura**.
 
 ## Producción (servidor propio)
 
@@ -78,7 +89,8 @@ npm run build
 ```
 
 Subir **el contenido de `dist/`** a la carpeta pública del servidor
-(por ejemplo `public_html/`). El servidor debe cumplir dos condiciones:
+(por ejemplo `public_html/`). Incluye `config.env`: ajustar ahí broker, API y usuarios
+(en una actualización, conservar el `config.env` que ya está en el servidor). El servidor debe cumplir dos condiciones:
 
 1. **Fallback de rutas**: devolver `index.html` cuando la ruta no sea un archivo,
    para que `/historial` y `/lotes/13` funcionen al recargar.
@@ -130,7 +142,7 @@ no hace falta el proxy: el valor por defecto `API_BASE=/api` funciona directo.
 
 ### Si no podés usar proxy
 
-Definí `VITE_API_BASE=https://api.ejemplo.com` **antes de compilar**. Pero la API
+Definí `API_BASE=https://api.ejemplo.com` en `config.env` (o `VITE_API_BASE` antes de compilar). Pero la API
 debe habilitar CORS para el dominio del frontend; hoy no lo hace, por eso el proxy
 es la opción recomendada.
 
@@ -148,6 +160,7 @@ es la opción recomendada.
 ```
 src/
   config/monitor.js        Configuración (MQTT, API, áreas, tolerancias)
+  lib/entorno.js           Lee config.env al arrancar (prioridad sobre .env.local)
   context/MonitorContext   Conexión MQTT y estado en vivo de las salas
   context/ThemeContext     Tema claro/oscuro
   lib/api.js               Cliente de lotes.php

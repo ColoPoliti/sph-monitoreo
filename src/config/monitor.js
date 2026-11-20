@@ -1,17 +1,20 @@
 // Configuración del monitor de salas.
-// Los valores se pueden sobrescribir con variables de entorno de Vite (.env.local).
+// Broker y API se toman de config.env (servidor) o de .env.local (ver src/lib/entorno.js).
+// Los valores por defecto son los de la instalación actual en planta.
 // OJO: el usuario MQTT debe ser de SOLO LECTURA.
+
+import { env } from '../lib/entorno';
 
 export const CONFIG = {
   // MQTT por WebSocket. En producción: wss://servidor/mqtt
-  MQTT_URL: import.meta.env.VITE_MQTT_URL || 'ws://10.200.1.243:9001',
-  MQTT_USER: import.meta.env.VITE_MQTT_USER || 'web_lectura',
-  MQTT_PASS: import.meta.env.VITE_MQTT_PASS || 'admin.sph',
-  BROKER_ETIQUETA: import.meta.env.VITE_BROKER_ETIQUETA || '10.200.1.243',
+  MQTT_URL: env('MQTT_URL', 'ws://10.200.1.243:9001'),
+  MQTT_USER: env('MQTT_USER', 'web_lectura'),
+  MQTT_PASS: env('MQTT_PASS', 'admin.sph'),
+  BROKER_ETIQUETA: env('BROKER_ETIQUETA', '10.200.1.243'),
 
   // API PHP (lotes.php). En desarrollo /api lo redirige el proxy de Vite.
-  // En producción: definir VITE_API_BASE con la URL pública de la API.
-  API_BASE: import.meta.env.VITE_API_BASE || '/api',
+  // En el servidor se cambia con API_BASE en config.env.
+  API_BASE: env('API_BASE', '/api'),
 
   // Sin telemetría durante tantos segundos = PLC sin conexión (el PLC publica cada 1 s)
   SEGUNDOS_SIN_CONEXION: 5,
