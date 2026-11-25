@@ -1,94 +1,78 @@
-// Sesión de la vista de aprobación de lotes por Calidad.
-// Dos perfiles: "admin" (aprueba y rechaza) y "usuario" (solo consulta).
+// Sesión de la vista de aprobación de lotes por Calidad, contra la API (base MariaDB).
+// Dos perfiles: "admin" (aprueba, rechaza y quita) y "usuario" (solo consulta).
 //
-// PROVISORIO: las credenciales se validan acá, en el navegador. Cuando se defina
-// dónde se guardan usuario y contraseña (ej.: un login.php contra la base),
-// reemplazar SOLO el cuerpo de validarCredenciales por esa consulta
-// (debe devolver el perfil: 'admin' | 'usuario', o null si no coincide).
-// Mientras tanto se toman de config.env / .env.local y, si no están definidas:
-//   administrador -> admin / admin        (ADMIN_USER / ADMIN_PASS)
-//   usuario común -> usuario / usuario    (USUARIO_USER / USUARIO_PASS; también acepta USER_USER / USER_PASS)
+// La sesión viaja en una cookie HttpOnly (SPHSESION) que pone el servidor: el JS no la ve.
+// Acá solo se guarda en memoria lo que devuelve la API para dibujar la pantalla;
+// la fuente es /api/sesion.php (se consulta al abrir o recargar la página).
+// Vence a las 8 h sin uso y al cerrar el navegador: si una llamada devuelve 401 -> sin sesión.
 
 import { useSyncExternalStore } from 'react';
-import { env } from './entorno';
-
-const CLAVE_SESION = 'sph-admin';
+import { pedir } from './api';
 
 export const ROLES = {
   admin: 'Administrador',
   usuario: 'Usuario',
 };
 
-export async function validarCredenciales(usuario, clave) {
-  const u = usuario.trim();
-  const cuentas = [
-    { usuario: env('ADMIN_USER', 'admin'), clave: env('ADMIN_PASS', 'admin'), rol: 'admin' },
-    {
-      usuario: env('USUARIO_USER', env('USER_USER', 'usuario')),
-      clave: env('USUARIO_PASS', env('USER_PASS', 'usuario')),
-      rol: 'usuario',
-    },
-  ];
-  return cuentas.find((c) => c.usuario === u && c.clave === clave)?.rol || null;
-}
-
-export async function iniciarSesion(usuario, clave) {
-  const rol = await validarCredenciales(usuario, clave);
-  if (rol) {
-    try {
-      sessionStorage.setItem(CLAVE_SESION, JSON.stringify({ usuario: usuario.trim(), rol }));
-    } catch {
-      /* sin storage: la sesión dura lo que la página */
-    }
-    avisarCambio();
-  }
-  return Boolean(rol);
-}
+const SIN_SESION = { usuario: null, nombre: null, rol: null };
+let actual = SIN_SESION;
 
 // ---- Aviso de cambios de sesión, para que la pantalla se actualice sin refrescar ----
-const EVENTO = 'sph-sesion';
-const avisarCambio = () => window.dispatchEvent(new Event(EVENTO));
-
+const oyentes = new Set();
 const suscribir = (cb) => {
-  window.addEventListener(EVENTO, cb);
-  return () => window.removeEventListener(EVENTO, cb);
+  oyentes.add(cb);
+  return () => oyentes.delete(cb);
 };
 
-const leerCruda = () => {
+function fijar(datos) {
+  actual = datos?.usuario
+    ? { usuario: datos.usuario, nombre: datos.nombre || null, rol: datos.rol || null }
+    : SIN_SESION;
+  oyentes.forEach((cb) => cb());
+}
+
+/** Vuelve a "sin sesión" (por ejemplo, cuando una llamada devuelve 401). */
+export const sinSesion = () => fijar(null);
+
+/**
+ * POST /api/login.php. Devuelve true si entró; si no, lanza un Error con el texto
+ * de la API ("Usuario o contraseña incorrectos", "Demasiados intentos fallidos...").
+ */
+export async function iniciarSesion(usuario, clave) {
+  const data = await pedir('/login.php', { method: 'POST', cuerpo: { usuario: usuario.trim(), clave } });
+  fijar(data);
+  return true;
+}
+
+/** GET /api/sesion.php: ¿sigue logueado y con qué rol? (401 = sin sesión) */
+export async function verificarSesion() {
   try {
-    return sessionStorage.getItem(CLAVE_SESION);
+    fijar(await pedir('/sesion.php'));
   } catch {
-    return null;
+    fijar(null);
   }
-};
+}
+
+/** POST /api/logout.php. La pantalla pasa a "sin sesión" en el momento. */
+export async function cerrarSesion() {
+  fijar(null);
+  try {
+    await pedir('/logout.php', { method: 'POST', cuerpo: {} });
+  } catch {
+    /* igual queda sin sesión en esta pantalla */
+  }
+}
 
 /**
  * Sesión actual reactiva: el componente se vuelve a dibujar al iniciar o cerrar sesión.
- * Devuelve { usuario, rol } o { usuario: null, rol: null }.
+ * Devuelve { usuario, nombre, rol } o todo en null.
  */
 export function useSesion() {
-  useSyncExternalStore(suscribir, leerCruda);
-  return { usuario: usuarioActual(), rol: rolActual() };
+  return useSyncExternalStore(suscribir, () => actual);
 }
 
-const sesion = () => {
-  try {
-    return JSON.parse(sessionStorage.getItem(CLAVE_SESION) || 'null');
-  } catch {
-    return null;
-  }
-};
+export const usuarioActual = () => actual.usuario;
+export const rolActual = () => actual.rol;
 
-export const usuarioActual = () => sesion()?.usuario || null;
-
-// Sesiones viejas sin perfil se toman como admin (eran las únicas que existían)
-export const rolActual = () => (sesion() ? sesion().rol || 'admin' : null);
-
-export function cerrarSesion() {
-  try {
-    sessionStorage.removeItem(CLAVE_SESION);
-  } catch {
-    /* nada */
-  }
-  avisarCambio();
-}
+// Al cargar la app (este módulo se importa después de leer config.env), se consulta la sesión
+verificarSesion();

@@ -158,7 +158,7 @@ export function mostrarInfoLote(fila) {
   ];
   if (cal) {
     filas.push(['Revisó', cal.usuario || '—']);
-    filas.push(['Fecha de revisión', cal.fecha ? new Date(cal.fecha).toLocaleString('es-AR') : '—']);
+    filas.push(['Fecha de revisión', cal.fecha ? new Date(String(cal.fecha).replace(' ', 'T')).toLocaleString('es-AR') : '—']);
   }
 
   const tabla = filas

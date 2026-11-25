@@ -44,15 +44,12 @@ function Contenido({ onCerrar }) {
     setError('');
     setEnviando(true);
     try {
-      const ok = await iniciarSesion(usuario, clave);
-      if (ok) {
-        onCerrar();
-        navigate('/historial'); // ahí se aprueban los lotes
-      } else {
-        setError('Usuario o contraseña incorrectos.');
-      }
+      await iniciarSesion(usuario, clave);
+      onCerrar();
+      navigate('/historial'); // ahí se aprueban los lotes
     } catch (err) {
-      setError('No se pudo validar el acceso (' + err.message + ').');
+      // Texto de "error" de la API tal cual (clave incorrecta, bloqueo de 5 minutos, etc.)
+      setError(err.message);
     } finally {
       setEnviando(false);
     }

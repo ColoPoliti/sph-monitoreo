@@ -27,7 +27,7 @@ export default function SesionMenu() {
   const ref = useRef(null);
 
   // Reactivo: se actualiza solo al iniciar o cerrar sesión
-  const { usuario, rol } = useSesion();
+  const { usuario, nombre, rol } = useSesion();
 
   // Cierra el menú al hacer clic afuera o con Escape
   useEffect(() => {
@@ -68,9 +68,10 @@ export default function SesionMenu() {
     );
   }
 
-  const otrasCredenciales = () => {
+  // Espera el logout antes de abrir el login, así no cierra la sesión nueva
+  const otrasCredenciales = async () => {
     setAbierto(false);
-    cerrarSesion();
+    await cerrarSesion();
     setLoginAbierto(true);
   };
 
@@ -83,7 +84,7 @@ export default function SesionMenu() {
     <div ref={ref} className="relative ml-auto flex flex-none items-center gap-1.5">
       {/* Solo indicador de la sesión (no es un botón) */}
       <span
-        title={`Sesión iniciada como ${usuario} (${ROLES[rol] || rol})`}
+        title={`Sesión iniciada como ${usuario}${nombre ? ` · ${nombre}` : ''} (${ROLES[rol] || rol})`}
         className="flex h-10 flex-none select-none items-center gap-2 rounded-[10px] border border-transparent px-2 text-sm font-semibold text-gray-900 dark:text-white"
       >
         <FontAwesomeIcon

@@ -1,5 +1,6 @@
-import { aplicarAprobacion, quitarDecision, registrarDecision } from './aprobaciones';
+import { conDecision, quitarDecision, registrarDecision } from './aprobaciones';
 import { confirmarQuitarAprobacion, preguntarDecision, toastCalidad } from './alertasCalidad';
+import { getLote } from './api';
 import { useSesion } from './auth';
 
 /**
@@ -8,13 +9,35 @@ import { useSesion } from './auth';
  * Devuelve esAdmin y onAprobar (para LotesTable). Los avisos salen como toast arriba.
  */
 export function useAprobacionCalidad(setFilas) {
-  // Reactivo: al cerrar sesión desaparecen el switch y la info sin refrescar
+  // Reactivo: al cerrar sesión (o si vence) desaparecen el switch y la info sin refrescar
   const { usuario, rol } = useSesion();
   const esAdmin = Boolean(usuario) && rol === 'admin';
 
-  // Vuelve a leer la decisión guardada para esa fila
-  const refrescarFila = (id) =>
-    setFilas((prev) => prev.map((r) => (r.id === id ? aplicarAprobacion(r) : r)));
+  // Pone en la fila la decisión que devolvió la API (null = sin revisar)
+  const ponerDecision = (id, calidad) =>
+    setFilas((prev) => prev.map((r) => (r.id === id ? conDecision(r, calidad) : r)));
+
+  // Vuelve a pedir el lote a lotes.php (por ejemplo si otra PC lo cambió: 409)
+  const recargarFila = (id) =>
+    getLote(id)
+      .then((d) => {
+        if (d?.lote) setFilas((prev) => prev.map((r) => (r.id === id ? { ...r, ...d.lote } : r)));
+      })
+      .catch(() => {
+        /* queda como estaba */
+      });
+
+  // Ejecuta la acción contra la API; si falla muestra el texto de "error" tal cual
+  const ejecutar = async (fila, accion) => {
+    try {
+      await accion();
+      return true;
+    } catch (e) {
+      toastCalidad(e.message, 'rechazado');
+      if (e.status === 409 || e.status === 404) recargarFila(fila.id);
+      return false;
+    }
+  };
 
   const onAprobar = async (fila, encender) => {
     if (!esAdmin) return; // solo el administrador aprueba
@@ -23,9 +46,11 @@ export function useAprobacionCalidad(setFilas) {
     if (!encender) {
       // Apagar el switch de un lote aprobado
       if (!(await confirmarQuitarAprobacion(fila))) return;
-      quitarDecision(fila.id);
-      refrescarFila(fila.id);
-      toastCalidad(`Quitaste la aprobación del ${nombre}`, 'neutro');
+      const ok = await ejecutar(fila, async () => {
+        await quitarDecision(fila.id);
+        ponerDecision(fila.id, null);
+      });
+      if (ok) toastCalidad(`Quitaste la aprobación del ${nombre}`, 'neutro');
       return;
     }
 
@@ -34,14 +59,20 @@ export function useAprobacionCalidad(setFilas) {
 
     if (r.decision === 'quitar') {
       // Quitar el rechazo: el lote vuelve a su estado original (sin revisar)
-      quitarDecision(fila.id);
-      refrescarFila(fila.id);
-      toastCalidad(`Quitaste el rechazo del ${nombre}`, 'neutro');
+      const ok = await ejecutar(fila, async () => {
+        await quitarDecision(fila.id);
+        ponerDecision(fila.id, null);
+      });
+      if (ok) toastCalidad(`Quitaste el rechazo del ${nombre}`, 'neutro');
       return;
     }
 
-    registrarDecision(fila.id, r, usuario);
-    refrescarFila(fila.id);
+    const ok = await ejecutar(fila, async () => {
+      const calidad = await registrarDecision(fila.id, r);
+      if (calidad) ponerDecision(fila.id, calidad);
+      else recargarFila(fila.id);
+    });
+    if (!ok) return;
     if (r.decision === 'aprobado') toastCalidad(`Aprobaste el ${nombre}`, 'aprobado');
     else toastCalidad(`Rechazaste el ${nombre}`, 'rechazado');
   };

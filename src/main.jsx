@@ -6,8 +6,8 @@ import './index.css'
 import { cargarEntorno } from './lib/entorno'
 import { ThemeProvider } from './context/ThemeContext'
 
-// Primero config.env (broker, API, credenciales) y recién después la app,
-// porque src/config/monitor.js y auth.js leen esos valores al importarse.
+// Primero config.env (broker, API) y recién después la app,
+// porque src/config/monitor.js lee esos valores al importarse.
 cargarEntorno()
   .then(() => import('./App.jsx'))
   .then(({ default: App }) => {

@@ -1,66 +1,44 @@
-// Decisión de Calidad sobre cada lote: aprobado o rechazado (con comentario).
-//
-// PROVISORIO: la API (lotes.php) todavía no guarda aprobaciones, así que se
-// guardan en este navegador (localStorage). Cuando exista el endpoint, cambiar
-// registrarDecision / quitarDecision / leer por llamadas a la API.
+// Decisión de Calidad sobre cada lote (aprobado o rechazado con comentario), guardada en la base.
+// El servidor pone usuario y fecha desde la sesión y controla qué cambios de estado se permiten (409 si no).
+// lotes.php ya devuelve estado, estado_original y calidad: no hay nada que aplicar en el navegador.
 
-const CLAVE = 'sph-aprobaciones';
+import { pedir } from './api';
+import { sinSesion } from './auth';
 
-const leer = () => {
+// Si la sesión venció (401), la pantalla vuelve a "sin sesión"; el error sigue para mostrar su texto
+async function conSesion(promesa) {
   try {
-    return JSON.parse(localStorage.getItem(CLAVE) || '{}');
-  } catch {
-    return {};
+    return await promesa;
+  } catch (e) {
+    if (e.status === 401) sinSesion();
+    throw e;
   }
-};
-
-const guardar = (datos) => {
-  try {
-    localStorage.setItem(CLAVE, JSON.stringify(datos));
-  } catch {
-    /* sin storage */
-  }
-};
-
-// decision: 'aprobado' | 'rechazado'
-export function registrarDecision(id, { decision, comentario = '' }, usuario) {
-  const datos = leer();
-  datos[id] = { decision, comentario: comentario.trim(), usuario, fecha: new Date().toISOString() };
-  guardar(datos);
 }
 
-export function quitarDecision(id) {
-  const datos = leer();
-  delete datos[id];
-  guardar(datos);
+/**
+ * POST /api/calidad.php. decision: 'aprobado' | 'rechazado'.
+ * El comentario solo se guarda en el rechazo (vacío = sin comentario).
+ * Devuelve el objeto "calidad" de la respuesta: { decision, comentario, usuario, fecha }.
+ */
+export async function registrarDecision(id, { decision, comentario = '' }) {
+  const cuerpo = { id: Number(id), decision };
+  if (decision === 'rechazado') cuerpo.comentario = (comentario || '').trim();
+  const data = await conSesion(pedir('/calidad.php', { method: 'POST', cuerpo }));
+  return data.calidad;
 }
 
-export const aprobarLote = (id, usuario) => registrarDecision(id, { decision: 'aprobado' }, usuario);
+/** DELETE /api/calidad.php?id=N: quita la aprobación o el rechazo (vuelve a sin revisar). */
+export async function quitarDecision(id) {
+  await conSesion(pedir('/calidad.php?id=' + encodeURIComponent(id), { method: 'DELETE' }));
+}
+
+export const aprobarLote = (id) => registrarDecision(id, { decision: 'aprobado' });
 export const quitarAprobacion = quitarDecision;
 
-// Pone el estado de la decisión ("aprobado"/"rechazado") y guarda el estado original
-export function aplicarAprobacion(lote) {
-  if (!lote) return lote;
+/** Fila con la decisión aplicada (calidad = respuesta de la API, o null al quitarla). */
+export function conDecision(lote, calidad) {
   const original = lote.estado_original ?? lote.estado;
-  const a = leer()[lote.id];
-  if (!a) {
-    const sinDecision = { ...lote, estado: original };
-    delete sinDecision.estado_original;
-    delete sinDecision.calidad;
-    return sinDecision;
-  }
-  return {
-    ...lote,
-    estado: a.decision || 'aprobado',
-    estado_original: original,
-    calidad: {
-      decision: a.decision || 'aprobado',
-      comentario: a.comentario || '',
-      usuario: a.usuario,
-      fecha: a.fecha,
-    },
-  };
+  return calidad
+    ? { ...lote, estado: calidad.decision, estado_original: original, calidad }
+    : { ...lote, estado: original, estado_original: original, calidad: null };
 }
-
-export const aplicarAprobaciones = (filas) =>
-  Array.isArray(filas) ? filas.map(aplicarAprobacion) : filas;
