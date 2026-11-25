@@ -1,7 +1,8 @@
 // Configuración en tiempo de ejecución: lee /config.env al abrir la web.
 //
 // config.env (en public/, queda en la raíz de dist/) se edita directamente en el
-// servidor: cambiar broker, API o credenciales NO requiere volver a compilar.
+// servidor: cambiar broker o API NO requiere volver a compilar.
+// Los usuarios de Calidad NO van acá: están en la base y los valida la API (login.php).
 //
 // Prioridad de cada valor:
 //   1. config.env del servidor (si la clave tiene valor)

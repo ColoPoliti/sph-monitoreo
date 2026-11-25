@@ -15,6 +15,9 @@ manteniendo la misma estructura visual y funcionalidad.
 - **Últimas elaboraciones** del PLC seleccionado (se refresca cada 60 s).
 - **Historial con filtros**: sector, PLC, rango de días y franja horaria (cruza medianoche).
 - **Etiqueta digital de un lote**: tiempos, origen de datos y tolerancias por insumo.
+- **Aprobación de Calidad**: con sesión de administrador se aprueba, rechaza (con comentario)
+  o quita la decisión de cada lote. Se guarda en la base (MariaDB) a través de la API,
+  así todas las PC ven lo mismo.
 - **Estado de conexión**: broker MQTT y PLC en línea.
 - **Tema claro/oscuro** persistido en `localStorage`.
 - **Responsive y accesible**: menú lateral colapsable (drawer en móvil), foco visible,
@@ -61,8 +64,6 @@ con esta prioridad (gana el primero que tenga valor):
 | `MQTT_USER` / `MQTT_PASS` | `web_lectura` / (la actual) | Usuario MQTT de **solo lectura** |
 | `BROKER_ETIQUETA` | `10.200.1.243` | Texto de la barra de estado |
 | `API_BASE` | `/api` | Ruta (o URL) de la API PHP de lotes |
-| `ADMIN_USER` / `ADMIN_PASS` | `admin` / `admin` | Login provisorio de Calidad (aprueba/rechaza) |
-| `USUARIO_USER` / `USUARIO_PASS` | `usuario` / `usuario` | Login provisorio de consulta (acepta también `USER_USER` / `USER_PASS`) |
 | `API_DESTINO` | `http://10.200.1.243:8080` | Solo `.env.local`: destino del proxy `/api` de Vite en desarrollo |
 
 La lectura la hace `src/lib/entorno.js` antes de arrancar la app (`main.jsx`).
@@ -78,7 +79,44 @@ En `src/config/monitor.js` (requieren recompilar) se configuran además:
 - `AREAS`: salas, PLCs, nombres de etapas y unidades especiales.
 
 > `config.env` y el código compilado se descargan en el navegador: cualquiera que abra
-> la página puede ver estas credenciales. El usuario MQTT debe ser de **solo lectura**.
+> la página puede ver estos valores. El usuario MQTT debe ser de **solo lectura** y
+> **no** se ponen usuarios ni contraseñas de Calidad (ni en `config.env` ni en `.env.local`).
+
+## Usuarios y aprobación de Calidad
+
+Los usuarios y contraseñas **no se configuran en la web**: están en la base de datos
+(MariaDB) del servidor y los valida la API. Para crear un usuario o cambiar una contraseña
+hay que hacerlo en la tabla de usuarios que usa `login.php` (consultar con quien administra
+la API; si la clave se guarda con `password_hash()`, se genera con
+`php -r "echo password_hash('LaClave', PASSWORD_DEFAULT);"`).
+
+Perfiles:
+
+| Rol | Puede |
+| --- | --- |
+| `admin` | Aprobar, rechazar y quitar la decisión |
+| `usuario` | Solo consultar (switch deshabilitado) |
+| sin sesión | Ver monitor e historial, sin switch |
+
+La sesión viaja en una cookie `HttpOnly` (`SPHSESION`) que pone el servidor; vence a las
+8 h sin uso y al cerrar el navegador. Si cualquier llamada devuelve 401, la web vuelve a
+"sin sesión". Después de 5 intentos fallidos el usuario queda bloqueado 5 minutos.
+
+Endpoints que usa la web (todos bajo `/api`, respuestas JSON; en los errores
+`{ "ok": false, "error": "..." }`, que se muestra tal cual):
+
+| Método y ruta | Para qué | Código en la web |
+| --- | --- | --- |
+| `POST /api/login.php` `{ usuario, clave }` | Iniciar sesión | `src/lib/auth.js` |
+| `GET /api/sesion.php` | Saber si hay sesión y con qué rol (al abrir la página) | `src/lib/auth.js` |
+| `POST /api/logout.php` | Cerrar sesión | `src/lib/auth.js` |
+| `POST /api/calidad.php` `{ id, decision, comentario }` | Aprobar o rechazar | `src/lib/aprobaciones.js` |
+| `DELETE /api/calidad.php?id=N` | Quitar aprobación o rechazo | `src/lib/aprobaciones.js` |
+| `GET /api/lotes.php` | Listado y detalle; trae `estado`, `estado_original` y `calidad` | `src/lib/api.js` |
+
+Todos los POST llevan `Content-Type: application/json` (sin él la API responde 415).
+Los cambios de estado los controla el servidor: rechazar un lote aprobado o volver a
+rechazar uno rechazado devuelve 409 (primero hay que quitar la decisión).
 
 ## Producción (servidor propio)
 
@@ -88,8 +126,24 @@ Generar el build:
 npm run build
 ```
 
+### Servidor del cliente (Docker, 10.200.1.243)
+
+Subir al servidor, en `infra/monitor`: `src`, `public`, `index.html`, `package.json`,
+`package-lock.json` y los `*.config.js`. **No** subir `node_modules`, `dist` ni `.git`, y
+**no** pisar `Dockerfile` ni `nginx.conf` del servidor (`nginx.conf` tiene las rutas
+`/api` y `/mqtt`). Revisar `config.env` en el servidor y compilar con:
+
+```bash
+docker compose up -d --build monitor
+```
+
+Prueba final: login con el usuario admin de la base, aprobar, rechazar con comentario,
+quitar, y ver la misma decisión desde otra PC.
+
+### Otro servidor (dist/)
+
 Subir **el contenido de `dist/`** a la carpeta pública del servidor
-(por ejemplo `public_html/`). Incluye `config.env`: ajustar ahí broker, API y usuarios
+(por ejemplo `public_html/`). Incluye `config.env`: ajustar ahí broker y API
 (en una actualización, conservar el `config.env` que ya está en el servidor). El servidor debe cumplir dos condiciones:
 
 1. **Fallback de rutas**: devolver `index.html` cuando la ruta no sea un archivo,
@@ -153,7 +207,7 @@ es la opción recomendada.
 | `/` | Monitor de la sala seleccionada |
 | `/historial` | Historial con filtros |
 | `/lotes/:id` | Etiqueta digital del lote |
-| `/login` | Acceso (opcional, sin validación todavía) |
+| `/login` | Pantalla de acceso vieja (el login de Calidad es el modal "Aprobación calidad" del navbar) |
 
 ## Estructura
 
@@ -163,7 +217,10 @@ src/
   lib/entorno.js           Lee config.env al arrancar (prioridad sobre .env.local)
   context/MonitorContext   Conexión MQTT y estado en vivo de las salas
   context/ThemeContext     Tema claro/oscuro
-  lib/api.js               Cliente de lotes.php
+  lib/api.js               Pedidos a la API (lotes.php y función común con manejo de errores)
+  lib/auth.js              Sesión de Calidad (login.php, sesion.php, logout.php)
+  lib/aprobaciones.js      Decisiones de Calidad (calidad.php)
+  lib/useAprobacionCalidad Switch de aprobación en tablas y etiqueta digital
   lib/format.js            Formatos de números, tiempos y fechas
   lib/rooms.js             Estado/etapa de cada sala
   components/              Layout, sidebar, top bar, status, tabla, gráfico
