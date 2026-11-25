@@ -1,16 +1,22 @@
 // Configuración del monitor de salas.
 // Broker y API se toman de config.env (servidor) o de .env.local (ver src/lib/entorno.js).
-// Los valores por defecto son los de la instalación actual en planta.
+// Por defecto se usan rutas del mismo sitio (/mqtt y /api), que redirige el servidor web.
 // OJO: el usuario MQTT debe ser de SOLO LECTURA.
 
 import { env } from '../lib/entorno';
 
+// Una ruta como "/mqtt" se completa con la dirección del sitio: wss si es HTTPS, ws si es HTTP
+const urlMqtt = (valor) =>
+  valor.startsWith('/')
+    ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${valor}`
+    : valor;
+
 export const CONFIG = {
-  // MQTT por WebSocket. En producción: wss://servidor/mqtt
-  MQTT_URL: env('MQTT_URL', 'ws://10.200.1.243:9001'),
+  // MQTT por WebSocket: ruta del mismo sitio o URL completa (ws://... o wss://...)
+  MQTT_URL: urlMqtt(env('MQTT_URL', '/mqtt')),
   MQTT_USER: env('MQTT_USER', 'web_lectura'),
-  MQTT_PASS: env('MQTT_PASS', 'admin.sph'),
-  BROKER_ETIQUETA: env('BROKER_ETIQUETA', '10.200.1.243'),
+  MQTT_PASS: env('MQTT_PASS'),
+  BROKER_ETIQUETA: env('BROKER_ETIQUETA', window.location.hostname),
 
   // API PHP (lotes.php). En desarrollo /api lo redirige el proxy de Vite.
   // En el servidor se cambia con API_BASE en config.env.
