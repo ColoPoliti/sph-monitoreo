@@ -26,3 +26,7 @@ dist-ssr
 .vercel
 .env*
 !.env.example
+
+# Solo locales
+zz bkp/
+CLAUDE.md
