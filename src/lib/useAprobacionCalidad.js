@@ -1,7 +1,7 @@
 import { conDecision, quitarDecision, registrarDecision } from './aprobaciones';
 import { confirmarQuitarAprobacion, preguntarDecision, toastCalidad } from './alertasCalidad';
 import { getLote } from './api';
-import { useSesion } from './auth';
+import { puedeAprobar, useSesion } from './auth';
 
 /**
  * Aprobación de lotes por Calidad dentro de una tabla de lotes.
@@ -11,7 +11,8 @@ import { useSesion } from './auth';
 export function useAprobacionCalidad(setFilas) {
   // Reactivo: al cerrar sesión (o si vence) desaparecen el switch y la info sin refrescar
   const { usuario, rol } = useSesion();
-  const esAdmin = Boolean(usuario) && rol === 'admin';
+  // Administrador o superadministrador
+  const esAdmin = Boolean(usuario) && puedeAprobar(rol);
 
   // Pone en la fila la decisión que devolvió la API (null = sin revisar)
   const ponerDecision = (id, calidad) =>

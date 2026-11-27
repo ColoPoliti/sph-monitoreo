@@ -8,6 +8,7 @@ import { CONFIG, areaDe } from '../config/monitor';
 import { getLote } from '../lib/api';
 import { descargarRecetaPdf } from '../lib/recetaPdf';
 import { useAprobacionCalidad } from '../lib/useAprobacionCalidad';
+import { useRefresco } from '../lib/useRefresco';
 import { codigoMP, fechaCorta, fmt, mmss, num, signo } from '../lib/format';
 
 const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
@@ -95,6 +96,19 @@ export default function EtiquetaDigital() {
       cancelado = true;
     };
   }, [id]);
+
+  // Refresco en segundo plano: si Calidad cambia el lote desde otra PC, se ve sin apretar F5.
+  // Si falla, queda como estaba; si mientras tanto se abrió otro lote, se descarta.
+  useRefresco(() => {
+    const pedido = id;
+    getLote(pedido)
+      .then((d) => {
+        setEstado((e) => (e.id === pedido && !e.cargando && e.data ? { ...e, data: d } : e));
+      })
+      .catch(() => {
+        /* queda como estaba */
+      });
+  });
 
   const cargando = estado.id !== id || estado.cargando;
   const data = estado.id === id ? estado.data : null;

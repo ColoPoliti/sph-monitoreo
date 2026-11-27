@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useNavigate } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import {
   faClipboardCheck,
   faEllipsisVertical,
   faRightFromBracket,
   faUser,
+  faUserGear,
   faUserShield,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import { ROLES, cerrarSesion, useSesion } from '../lib/auth';
+import { ROLES, cerrarSesion, esSuperadmin, puedeAprobar, useSesion } from '../lib/auth';
 
 // Botón de los 3 puntos: solo ícono, sin fondo ni borde (fondo suave al pasar el mouse o con el menú abierto)
 const BOTON =
@@ -25,6 +27,7 @@ export default function SesionMenu() {
   const [loginAbierto, setLoginAbierto] = useState(false);
   const cerrarLogin = useCallback(() => setLoginAbierto(false), []);
   const ref = useRef(null);
+  const navigate = useNavigate();
 
   // Reactivo: se actualiza solo al iniciar o cerrar sesión
   const { usuario, nombre, rol } = useSesion();
@@ -80,6 +83,11 @@ export default function SesionMenu() {
     cerrarSesion();
   };
 
+  const irAUsuarios = () => {
+    setAbierto(false);
+    navigate('/usuarios');
+  };
+
   return (
     <div ref={ref} className="relative ml-auto flex flex-none items-center gap-1.5">
       {/* Solo indicador de la sesión (no es un botón) */}
@@ -88,7 +96,7 @@ export default function SesionMenu() {
         className="flex h-10 flex-none select-none items-center gap-2 rounded-[10px] border border-transparent px-2 text-sm font-semibold text-gray-900 dark:text-white"
       >
         <FontAwesomeIcon
-          icon={rol === 'admin' ? faUserShield : faUser}
+          icon={puedeAprobar(rol) ? faUserShield : faUser}
           className="text-sky-600 dark:text-sky-400"
           aria-hidden="true"
         />
@@ -113,6 +121,13 @@ export default function SesionMenu() {
           role="menu"
           className="absolute right-0 top-full z-50 mt-2 w-max min-w-[16rem] overflow-hidden whitespace-nowrap rounded-[10px] border border-gray-300 bg-white text-gray-900 shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         >
+          {/* Solo el superadministrador: administración de usuarios */}
+          {esSuperadmin(rol) && (
+            <button type="button" role="menuitem" onClick={irAUsuarios} className={`${ITEM} border-b border-gray-200 dark:border-slate-700`}>
+              <FontAwesomeIcon icon={faUserGear} className="w-4 text-gray-600 dark:text-slate-300" aria-hidden="true" />
+              Usuarios
+            </button>
+          )}
           <button type="button" role="menuitem" onClick={otrasCredenciales} className={ITEM}>
             <FontAwesomeIcon icon={faUsers} className="w-4 text-gray-600 dark:text-slate-300" aria-hidden="true" />
             Ingresar con otras credenciales

@@ -12,6 +12,9 @@ export function useTituloVista() {
   if (pathname.startsWith('/historial')) {
     return { titulo: 'Historial de elaboraciones', sub: 'Todas las salas' };
   }
+  if (pathname.startsWith('/usuarios')) {
+    return { titulo: 'Usuarios', sub: 'Administración de accesos' };
+  }
   if (pathname.startsWith('/lotes/')) {
     return { titulo: 'Etiqueta digital', sub: '' };
   }

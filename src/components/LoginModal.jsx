@@ -3,9 +3,12 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faClipboardCheck, faEye, faEyeSlash, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { labelClass, subClass } from './ui';
 import { iniciarSesion } from '../lib/auth';
+import { toastCalidad } from '../lib/alertasCalidad';
+import { DEMO } from '../lib/demo';
+import { CLAVE_DEMO } from '../lib/demoApi';
 
 const INPUT =
   'min-h-11 w-full rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-950 px-3 py-1.5 text-[15px] font-medium text-gray-900 dark:text-white';
@@ -27,7 +30,8 @@ function Contenido({ onCerrar }) {
   const tituloId = useId();
   const [usuario, setUsuario] = useState('');
   const [clave, setClave] = useState('');
-  const [error, setError] = useState('');
+  // Ojo del campo contraseña: muestra u oculta lo escrito
+  const [verClave, setVerClave] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   // Escape cierra el modal
@@ -41,15 +45,18 @@ function Contenido({ onCerrar }) {
 
   const entrar = async (e) => {
     e.preventDefault();
-    setError('');
     setEnviando(true);
     try {
       await iniciarSesion(usuario, clave);
       onCerrar();
       navigate('/historial'); // ahí se aprueban los lotes
     } catch (err) {
-      // Texto de "error" de la API tal cual (clave incorrecta, bloqueo de 5 minutos, etc.)
-      setError(err.message);
+      // Toast arriba, como al aprobar/rechazar. Si el problema es del servidor (caído, sin red),
+      // se aclara que no es la contraseña; si no, el texto de "error" de la API tal cual
+      // (clave incorrecta, bloqueo de 5 minutos, etc.).
+      const delServidor = err.status === 0 || err.status >= 500 || err.status === 404;
+      if (delServidor) toastCalidad('No se pudo conectar', 'rechazado', `${err.message}.`);
+      else toastCalidad(err.message, 'rechazado');
     } finally {
       setEnviando(false);
     }
@@ -100,6 +107,14 @@ function Contenido({ onCerrar }) {
           </div>
         </div>
 
+        {/* Modo demo: qué usuarios de ejemplo hay (no existe en producción) */}
+        {DEMO && (
+          <p className="m-0 rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-[14px] text-sky-800 dark:text-sky-200">
+            <b>Modo demo:</b> usuario <b>super</b> (superadministrador), <b>calidad1</b> (administrador) u{' '}
+            <b>operario1</b> (usuario). Clave: <b>{CLAVE_DEMO}</b>
+          </p>
+        )}
+
         <label className="flex flex-col gap-1.5">
           <span className={labelClass}>Usuario</span>
           <input
@@ -115,21 +130,27 @@ function Contenido({ onCerrar }) {
 
         <label className="flex flex-col gap-1.5">
           <span className={labelClass}>Contraseña</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            className={INPUT}
-            value={clave}
-            onChange={(e) => setClave(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={verClave ? 'text' : 'password'}
+              autoComplete="current-password"
+              required
+              className={`${INPUT} pr-11`}
+              value={clave}
+              onChange={(e) => setClave(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setVerClave((v) => !v)}
+              aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-pressed={verClave}
+              title={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:text-gray-900 dark:text-slate-300 dark:hover:text-white"
+            >
+              <FontAwesomeIcon icon={verClave ? faEyeSlash : faEye} aria-hidden="true" />
+            </button>
+          </div>
         </label>
-
-        {error && (
-          <p role="alert" className="m-0 text-sm font-medium text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        )}
 
         <button
           type="submit"

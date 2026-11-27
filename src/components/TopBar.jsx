@@ -6,6 +6,7 @@ import Reloj from './Reloj';
 import SaphirusLogo from './SaphirusLogo';
 import SesionMenu from './SesionMenu';
 import ThemeToggle from './ThemeToggle';
+import InstalarApp from './InstalarApp';
 
 export default function TopBar({ menuOpen, onToggleMenu }) {
   const { titulo, sub } = useTituloVista();
@@ -52,6 +53,9 @@ export default function TopBar({ menuOpen, onToggleMenu }) {
 
       {/* Iniciar sesión; con sesión: usuario + menú de 3 puntos (otras credenciales / cerrar sesión) */}
       <SesionMenu />
+
+      {/* Solo aparece si la app se puede instalar (y todavía no está instalada) */}
+      <InstalarApp />
 
       <ThemeToggle />
     </header>

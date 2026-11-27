@@ -6,7 +6,7 @@ import { pedir } from './api';
 import { sinSesion } from './auth';
 
 // Si la sesión venció (401), la pantalla vuelve a "sin sesión"; el error sigue para mostrar su texto
-async function conSesion(promesa) {
+export async function conSesion(promesa) {
   try {
     return await promesa;
   } catch (e) {

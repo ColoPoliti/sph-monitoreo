@@ -3,12 +3,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClockRotateLeft, faIndustry } from '@fortawesome/free-solid-svg-icons';
 import SalasMenu from '../components/SalasMenu';
 import logoFoot from '../assets/logo-foot.png';
+// Versión para modo claro: el "4" en oscuro (en logo-foot.png es blanco y no se ve sobre fondo claro)
+import logoFootClaro from '../assets/logo-foot-claro.png';
 
 const MODULO = { label: 'Monitoreo', icono: faIndustry };
 const HISTORIAL = { to: '/historial', label: 'Historial de elaboraciones', sub: 'Todas las salas', icono: faClockRotateLeft };
 
+// Celular o tablet: pantalla angosta, o táctil (cubre el celular horizontal o con "sitio de escritorio",
+// donde el ancho puede pasar de 1023 px). Ahí el menú se cierra al tocar un PLC o el Historial.
 const esMovil = () =>
-  typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches;
+  typeof window !== 'undefined' &&
+  (window.matchMedia('(max-width: 1023px)').matches || window.matchMedia('(pointer: coarse)').matches);
 
 /**
  * Ítem del menú lateral (mismo diseño que "Historial de elaboraciones" del monitor original):
@@ -124,7 +129,9 @@ export default function Sidebar({ open, onClose, onToggle }) {
         className={`flex flex-none items-center border-t border-gray-200 dark:border-white/[.06] py-4 ${open ? 'justify-start gap-2.5 px-4' : 'justify-center px-2'
           }`}
       >
-        <img src={logoFoot} alt="industria 4" className="h-7 w-7 flex-shrink-0 object-contain" />
+        {/* Mismo criterio que el MES: cada tema muestra su versión del logo */}
+        <img src={logoFootClaro} alt="industria 4" className="h-7 w-7 flex-shrink-0 object-contain dark:hidden" />
+        <img src={logoFoot} alt="industria 4" className="hidden h-7 w-7 flex-shrink-0 object-contain dark:block" />
         {open && (
           <span className="min-w-0 truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white">
             industria 4

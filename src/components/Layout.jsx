@@ -19,6 +19,20 @@ export default function Layout() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Clic en cualquier lugar fuera del menú lateral: se cierra (en escritorio queda contraído).
+  // No cuenta el propio menú ni el botón que lo abre/cierra (hamburguesa), que ya hace su toggle.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const fuera = (e) => {
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      if (t.closest('#menu-lateral') || t.closest('[aria-controls="menu-lateral"]')) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', fuera);
+    return () => document.removeEventListener('mousedown', fuera);
+  }, [menuOpen]);
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-white dark:bg-slate-950 text-gray-900 dark:text-white">
       <TopBar menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((v) => !v)} />

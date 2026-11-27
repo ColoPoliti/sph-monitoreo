@@ -5,6 +5,8 @@ import 'inter-ui/inter-variable-latin.css'
 import './index.css'
 import { cargarEntorno } from './lib/entorno'
 import { ThemeProvider } from './context/ThemeContext'
+// Web app instalable: escucha desde el arranque el aviso del navegador de que se puede instalar
+import './lib/instalarPWA'
 
 // Primero config.env (broker, API) y recién después la app,
 // porque src/config/monitor.js lee esos valores al importarse.

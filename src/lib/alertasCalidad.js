@@ -35,7 +35,8 @@ const TOAST_TIPO = {
   neutro: { icon: 'info', borde: '!border-gray-400 dark:!border-slate-500' },
 };
 
-export function toastCalidad(texto, tipo = 'neutro') {
+// detalle (opcional): segunda línea debajo del título
+export function toastCalidad(texto, tipo = 'neutro', detalle) {
   const t = TOAST_TIPO[tipo] || TOAST_TIPO.neutro;
   return Swal.fire({
     toast: true,
@@ -44,6 +45,7 @@ export function toastCalidad(texto, tipo = 'neutro') {
     // Aprobado: verde brillante (green-500) en el ícono; el resto, el color de SweetAlert
     ...(tipo === 'aprobado' ? { iconColor: '#22c55e' } : {}),
     title: texto,
+    ...(detalle ? { text: detalle } : {}),
     showConfirmButton: false,
     timer: 2500, // 2,5 s
     timerProgressBar: true,
@@ -59,6 +61,7 @@ export function toastCalidad(texto, tipo = 'neutro') {
       container: '!top-[64px]', // el toast queda justo debajo del navbar (72px)
       popup: `!rounded-[10px] !border !bg-white !text-gray-900 !shadow-lg dark:!bg-slate-800 dark:!text-white ${t.borde}`,
       title: '!text-[15px] !font-semibold !text-gray-900 dark:!text-white',
+      htmlContainer: '!m-0 !p-0 !text-left !text-[14px] !text-gray-600 dark:!text-slate-300',
       // Aprobado: el mismo verde brillante del ícono (green-500)
       timerProgressBar: tipo === 'rechazado' ? '!bg-red-500' : tipo === 'aprobado' ? '!bg-[#22c55e]' : '!bg-gray-400',
     },
@@ -193,4 +196,68 @@ export function mostrarInfoLote(fila) {
     showCloseButton: true,
     closeButtonHtml: '&times;',
   });
+}
+
+// ---- Web app (PWA): aviso de versión nueva e instrucciones para instalar en iPhone ----
+
+/**
+ * Toast arriba (como los de aprobar/rechazar) que queda hasta que se toca "Actualizar" o la X.
+ * Sale solo cuando el servidor tiene una versión nueva de la app. Devuelve true si tocó "Actualizar".
+ */
+export async function toastVersionNueva() {
+  const r = await Swal.fire({
+    toast: true,
+    position: 'top',
+    icon: 'info',
+    title: 'Hay una versión nueva',
+    text: 'Actualizá para usar la última versión de la app.',
+    showConfirmButton: true,
+    confirmButtonText: 'Actualizar',
+    showCloseButton: true,
+    closeButtonHtml: '&times;',
+    buttonsStyling: false,
+    showClass: { popup: 'animate-toast-in' },
+    hideClass: { popup: 'animate-toast-out' },
+    customClass: {
+      container: '!top-[64px]', // justo debajo del navbar (72px)
+      popup: '!rounded-[10px] !border !border-sky-500 !bg-white !text-gray-900 !shadow-lg dark:!border-sky-400 dark:!bg-slate-800 dark:!text-white',
+      title: '!text-[15px] !font-semibold !text-gray-900 dark:!text-white',
+      htmlContainer: '!m-0 !p-0 !text-left !text-[14px] !text-gray-600 dark:!text-slate-300',
+      actions: '!m-0 !mt-2 !justify-start',
+      confirmButton: `${BOTON} !mx-0 bg-sky-600 text-white dark:bg-sky-400 dark:text-gray-900`,
+      closeButton: '!text-2xl !text-gray-600 hover:!text-gray-900 focus:!shadow-none dark:!text-slate-400 dark:hover:!text-white',
+    },
+  });
+  return r.isConfirmed;
+}
+
+// iPhone/iPad (Safari): no hay botón de instalar del navegador, se hace desde "Compartir"
+export function mostrarInstalarIOS() {
+  return alerta.fire({
+    icon: 'info',
+    title: 'Instalar la app',
+    html: `<ol class="m-0 list-decimal pl-5 text-left leading-relaxed">
+        <li>Tocá el botón <b>Compartir</b> de Safari (el cuadrado con la flecha hacia arriba).</li>
+        <li>Elegí <b>Agregar a inicio</b>.</li>
+        <li>Tocá <b>Agregar</b>: la app queda en la pantalla de inicio.</li>
+      </ol>`,
+    confirmButtonText: 'Entendido',
+  });
+}
+
+// ---- Usuarios (superadministrador) ----
+
+// Antes de dar de baja un usuario: no se borra, queda inactivo y ya no puede ingresar
+export async function confirmarBajaUsuario(u) {
+  const r = await alerta.fire({
+    icon: 'warning',
+    title: `¿Dar de baja a ${esc(u.usuario)}?`,
+    html: `${u.nombre ? `${esc(u.nombre)}<br>` : ''}No va a poder ingresar más. Sus aprobaciones y rechazos quedan en el historial.`,
+    showCancelButton: true,
+    confirmButtonText: 'Dar de baja',
+    cancelButtonText: 'Cancelar',
+    focusCancel: true,
+    customClass: { ...CLASES, confirmButton: CLASES.denyButton },
+  });
+  return r.isConfirmed;
 }

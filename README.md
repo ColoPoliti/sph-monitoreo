@@ -94,6 +94,7 @@ Perfiles:
 
 | Rol | Puede |
 | --- | --- |
+| `superadmin` | Todo lo del `admin`, y además crear, ver y dar de baja usuarios (menú de sesión → Usuarios) |
 | `admin` | Aprobar, rechazar y quitar la decisión |
 | `usuario` | Solo consultar (switch deshabilitado) |
 | sin sesión | Ver monitor e historial, sin switch |
@@ -113,6 +114,14 @@ Endpoints que usa la web (todos bajo `/api`, respuestas JSON; en los errores
 | `POST /api/calidad.php` `{ id, decision, comentario }` | Aprobar o rechazar | `src/lib/aprobaciones.js` |
 | `DELETE /api/calidad.php?id=N` | Quitar aprobación o rechazo | `src/lib/aprobaciones.js` |
 | `GET /api/lotes.php` | Listado y detalle; trae `estado`, `estado_original` y `calidad` | `src/lib/api.js` |
+| `GET /api/usuarios.php` | Lista de usuarios: `usuario, nombre, rol, activo, creado, creado_por, ultimo_acceso` (nunca `clave_hash`) | `src/lib/usuarios.js` |
+| `POST /api/usuarios.php` `{ usuario, nombre, rol, clave }` | Crear usuario (409 si ya existe) | `src/lib/usuarios.js` |
+| `DELETE /api/usuarios.php?usuario=X` | Baja lógica (`activo = 0`): no se borra, ya no puede ingresar | `src/lib/usuarios.js` |
+
+`usuarios.php` responde 403 si la sesión no es `superadmin`, no permite darse de baja a uno
+mismo ni al último superadmin, y guarda la clave con `password_hash()`. `login.php` y
+`sesion.php` deben rechazar a los usuarios con `activo = 0`, y `calidad.php` debe aceptar
+también el rol `superadmin`.
 
 Todos los POST llevan `Content-Type: application/json` (sin él la API responde 415).
 Los cambios de estado los controla el servidor: rechazar un lote aprobado o volver a

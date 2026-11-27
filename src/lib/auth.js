@@ -10,9 +10,15 @@ import { useSyncExternalStore } from 'react';
 import { pedir } from './api';
 
 export const ROLES = {
+  superadmin: 'Superadministrador',
   admin: 'Administrador',
   usuario: 'Usuario',
 };
+
+// Aprueban, rechazan y quitan decisiones de Calidad: el administrador y el superadministrador
+export const puedeAprobar = (rol) => rol === 'admin' || rol === 'superadmin';
+// Solo el superadministrador crea, ve y da de baja usuarios (pantalla /usuarios)
+export const esSuperadmin = (rol) => rol === 'superadmin';
 
 const SIN_SESION = { usuario: null, nombre: null, rol: null };
 let actual = SIN_SESION;

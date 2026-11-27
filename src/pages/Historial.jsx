@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import LotesTable from '../components/LotesTable';
 import { Chip, labelClass, subClass } from '../components/ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,12 +14,15 @@ import { getHistorial } from '../lib/api';
 import { mostrarInfoLote } from '../lib/alertasCalidad';
 import { hoyISO } from '../lib/format';
 import { useAprobacionCalidad } from '../lib/useAprobacionCalidad';
+import { useRefresco } from '../lib/useRefresco';
 
 const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
 
 const inicial = () => ({
   sector: 'todos',
   plc: 'todos',
+  // Decisión de Calidad: todos | sin_revisar | aprobado | rechazado (lo filtra la API)
+  estado: 'todos',
   desde: hoyISO(-6),
   hasta: hoyISO(0),
   horaD: '00:00',
@@ -77,6 +80,28 @@ export default function Historial() {
       cancelado = true;
     };
   }, [aplicado]);
+
+  // Refresco en segundo plano: trae los cambios hechos desde otra PC (aprobaciones de Calidad,
+  // lotes nuevos). Si falla, la tabla queda como estaba; si mientras tanto cambió el filtro, se descarta.
+  const aplicadoRef = useRef(aplicado);
+  useEffect(() => {
+    aplicadoRef.current = aplicado;
+  }, [aplicado]);
+  useRefresco(() => {
+    const filtro = aplicadoRef.current;
+    getHistorial(filtro)
+      .then((data) => {
+        if (aplicadoRef.current !== filtro) return;
+        setFilas(data);
+        setAviso({
+          texto: data.length ? '' : 'Ninguna elaboración cumple con los filtros elegidos.',
+          error: false,
+        });
+      })
+      .catch(() => {
+        /* queda como estaba */
+      });
+  });
 
   const cambiar = (campo) => (e) =>
     setForm((f) => ({ ...f, [campo]: e.target.value }));
@@ -163,6 +188,17 @@ export default function Historial() {
                     {p}
                   </option>
                 ))}
+              </select>
+            </label>
+
+            {/* Calidad: "Sin revisar" = los lotes pendientes (ni aprobados ni rechazados) */}
+            <label className={CAMPO}>
+              <span className={labelClass}>Calidad</span>
+              <select id="fEstado" className={INPUT} value={form.estado} onChange={cambiar('estado')}>
+                <option value="todos">Todos</option>
+                <option value="sin_revisar">Sin revisar</option>
+                <option value="aprobado">Aprobados</option>
+                <option value="rechazado">Rechazados</option>
               </select>
             </label>
 

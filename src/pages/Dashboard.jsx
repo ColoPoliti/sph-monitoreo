@@ -18,6 +18,7 @@ import { ChipEtapa, ProgressPill, labelClass, subClass } from '../components/ui'
 import { CONFIG } from '../config/monitor';
 import { useMonitor } from '../context/MonitorContext';
 import { getUltimas } from '../lib/api';
+import { useRefresco } from '../lib/useRefresco';
 import { clamp, codigoMP, fmt, mmss, num } from '../lib/format';
 import { enEspera, enLinea, nombreEtapa, unidadEtapa } from '../lib/rooms';
 
@@ -29,6 +30,10 @@ export default function Dashboard() {
   const { selectedRoom: s, now, lotesVersion } = useMonitor();
   const [ultimas, setUltimas] = useState([]);
   const [avisoUlt, setAvisoUlt] = useState({ texto: '', error: false });
+  // Vuelve a pedir las últimas elaboraciones cada 10 s (y al volver a la pestaña),
+  // para ver los cambios de Calidad hechos desde otra PC
+  const [refresco, setRefresco] = useState(0);
+  useRefresco(() => setRefresco((n) => n + 1));
 
   const areaKey = s?.area.key;
   const plc = s?.plc;
@@ -64,7 +69,7 @@ export default function Dashboard() {
       cancelado = true;
       clearInterval(id);
     };
-  }, [areaKey, plc, lotesVersion]);
+  }, [areaKey, plc, lotesVersion, refresco]);
 
   if (!s) {
     return <p className="text-gray-600 dark:text-slate-300">Cargando salas…</p>;

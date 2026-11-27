@@ -1,18 +1,42 @@
 import { CONFIG } from '../config/monitor';
+import { DEMO } from './demo';
+import { esRutaDemo, respuestaDemo } from './demoApi';
 
 /**
  * Pedido a la API PHP (bajo /api, mismo sitio que la web: la cookie de sesión viaja sola).
  * Devuelve el JSON. Si el código no es 2xx lanza un Error con el texto "error" de la API
- * (o "HTTP nnn") y la propiedad status, para que la pantalla lo muestre tal cual.
+ * (o un texto entendible según el código HTTP, ver mensajeHttp) y la propiedad status (0 = sin conexión), para que la pantalla lo muestre tal cual.
  * cuerpo: objeto que se manda como JSON (con Content-Type: application/json, sin él la API responde 415).
  */
+// Texto entendible cuando la API no manda su propio "error" (proxy caído, servidor apagado, etc.)
+function mensajeHttp(status) {
+  if (status === 502 || status === 503 || status === 504) return 'El servidor no responde en este momento';
+  if (status === 404) return 'El servicio no está disponible en el servidor';
+  if (status === 401) return 'La sesión venció, volvé a ingresar';
+  if (status === 403) return 'No tenés permiso para esta acción';
+  if (status === 429) return 'Demasiados intentos, esperá unos minutos';
+  if (status >= 500) return 'Error interno del servidor';
+  return 'Error inesperado del servidor (código ' + status + ')';
+}
+
 export async function pedir(path, { method = 'GET', cuerpo } = {}) {
+  // Modo demo (?demo): login y usuarios simulados, sin servidor (ver lib/demoApi.js)
+  if (DEMO && esRutaDemo(path)) return respuestaDemo(path, method, cuerpo);
+
   const opciones = { method, cache: 'no-store' };
   if (cuerpo !== undefined) {
     opciones.headers = { 'Content-Type': 'application/json' };
     opciones.body = JSON.stringify(cuerpo);
   }
-  const r = await fetch(CONFIG.API_BASE + path, opciones);
+  let r;
+  try {
+    r = await fetch(CONFIG.API_BASE + path, opciones);
+  } catch {
+    // Sin red o sin respuesta del servidor (fetch no llega a recibir nada)
+    const err = new Error('Sin conexión con el servidor');
+    err.status = 0;
+    throw err;
+  }
   let data = null;
   try {
     data = await r.json();
@@ -20,7 +44,7 @@ export async function pedir(path, { method = 'GET', cuerpo } = {}) {
     /* respuesta sin JSON */
   }
   if (!r.ok) {
-    const err = new Error(data?.error || 'HTTP ' + r.status);
+    const err = new Error(data?.error || mensajeHttp(r.status));
     err.status = r.status;
     throw err;
   }
