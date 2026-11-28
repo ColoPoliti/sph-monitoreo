@@ -1,14 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faUserMinus, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faRotateLeft, faUserGear, faUserMinus, faUserPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
 import DataTable from '../components/DataTable';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
 import { Chip, labelClass, subClass } from '../components/ui';
 import { ROLES, esSuperadmin, useSesion } from '../lib/auth';
-import { bajaUsuario, getUsuarios } from '../lib/usuarios';
-import { confirmarBajaUsuario, toastCalidad } from '../lib/alertasCalidad';
+import { bajaUsuario, cambiarRolUsuario, getUsuarios, reactivarUsuario } from '../lib/usuarios';
+import {
+  confirmarBajaUsuario,
+  confirmarReactivarUsuario,
+  elegirRolUsuario,
+  toastCalidad,
+} from '../lib/alertasCalidad';
 
-const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+const CARD = 'rounded-md bg-white dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+
+// Botones de la columna Acciones (mismo formato que "Dar de baja", cada uno con su color)
+const BOTON_ACCION =
+  'inline-flex min-h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg border border-current px-3 text-[14px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40';
+const COLOR_ROL = 'bg-violet-500/10 text-violet-700 hover:bg-violet-500/20 dark:bg-violet-400/10 dark:text-violet-300 dark:hover:bg-violet-400/20';
+const COLOR_REACTIVAR = 'bg-teal-500/10 text-teal-700 hover:bg-teal-500/20 dark:bg-teal-400/10 dark:text-teal-300 dark:hover:bg-teal-400/20';
 
 // Color del chip de cada rol
 const CHIP_ROL = { superadmin: 'curso', admin: 'calidad', usuario: 'neutro' };
@@ -21,7 +32,8 @@ const fecha = (ts) => {
 
 /**
  * Administración de usuarios (solo superadministrador): tabla con todos los usuarios,
- * alta con el modal "Nuevo usuario" y baja lógica (el usuario queda inactivo, no se borra).
+ * alta con el modal "Nuevo usuario", baja lógica (el usuario queda inactivo, no se borra),
+ * reactivación de los dados de baja y cambio de rol.
  */
 export default function Usuarios() {
   const { usuario: yo, rol } = useSesion();
@@ -63,6 +75,29 @@ export default function Usuarios() {
     try {
       await bajaUsuario(u.usuario);
       toastCalidad(`Diste de baja a ${u.usuario}`, 'neutro');
+      recargar();
+    } catch (e) {
+      toastCalidad(e.message, 'rechazado');
+    }
+  };
+
+  const reactivar = async (u) => {
+    if (!(await confirmarReactivarUsuario(u))) return;
+    try {
+      await reactivarUsuario(u.usuario);
+      toastCalidad(`Reactivaste a ${u.usuario}`, 'aprobado');
+      recargar();
+    } catch (e) {
+      toastCalidad(e.message, 'rechazado');
+    }
+  };
+
+  const cambiarRol = async (u) => {
+    const nuevo = await elegirRolUsuario(u);
+    if (!nuevo) return;
+    try {
+      await cambiarRolUsuario(u.usuario, nuevo);
+      toastCalidad(`${u.usuario} ahora es ${ROLES[nuevo] || nuevo}`, 'aprobado');
       recargar();
     } catch (e) {
       toastCalidad(e.message, 'rechazado');
@@ -116,21 +151,48 @@ export default function Usuarios() {
       titulo: 'Acciones',
       oculto: true,
       alinear: 'right',
+      // Activo: "Cambiar rol" y "Dar de baja" (deshabilitados para uno mismo). De baja: "Reactivar".
       celda: (u) => {
         const esYo = u.usuario === yo;
-        if (!u.activo) return null;
+        if (!u.activo) {
+          return (
+            <button
+              type="button"
+              onClick={() => reactivar(u)}
+              title={`Reactivar a ${u.usuario}`}
+              aria-label={`Reactivar a ${u.usuario}`}
+              className={`${BOTON_ACCION} ${COLOR_REACTIVAR}`}
+            >
+              <FontAwesomeIcon icon={faRotateLeft} aria-hidden="true" />
+              Reactivar
+            </button>
+          );
+        }
         return (
-          <button
-            type="button"
-            onClick={() => darDeBaja(u)}
-            disabled={esYo}
-            title={esYo ? 'No podés darte de baja a vos mismo' : `Dar de baja a ${u.usuario}`}
-            aria-label={`Dar de baja a ${u.usuario}`}
-            className="inline-flex min-h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg border border-current bg-red-500/10 px-3 text-[14px] font-bold text-red-700 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-red-400/10 dark:text-red-300 dark:hover:bg-red-400/20"
-          >
-            <FontAwesomeIcon icon={faUserMinus} aria-hidden="true" />
-            Dar de baja
-          </button>
+          <span className="inline-flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => cambiarRol(u)}
+              disabled={esYo}
+              title={esYo ? 'No podés cambiar tu propio rol' : `Cambiar el rol de ${u.usuario}`}
+              aria-label={`Cambiar el rol de ${u.usuario}`}
+              className={`${BOTON_ACCION} ${COLOR_ROL}`}
+            >
+              <FontAwesomeIcon icon={faUserGear} aria-hidden="true" />
+              Cambiar rol
+            </button>
+            <button
+              type="button"
+              onClick={() => darDeBaja(u)}
+              disabled={esYo}
+              title={esYo ? 'No podés darte de baja a vos mismo' : `Dar de baja a ${u.usuario}`}
+              aria-label={`Dar de baja a ${u.usuario}`}
+              className="inline-flex min-h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg border border-current bg-red-500/10 px-3 text-[14px] font-bold text-red-700 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-red-400/10 dark:text-red-300 dark:hover:bg-red-400/20"
+            >
+              <FontAwesomeIcon icon={faUserMinus} aria-hidden="true" />
+              Dar de baja
+            </button>
+          </span>
         );
       },
     },
@@ -160,8 +222,8 @@ export default function Usuarios() {
           filas={filas}
           clave={(u) => u.usuario}
           columnas={columnas}
-          minWidth={860}
-          exportar="usuarios.csv"
+          minWidth={1000}
+          exportar="usuarios.xlsx"
           claseFila={(u) => (u.activo ? '' : 'opacity-60')}
         />
 

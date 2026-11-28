@@ -11,7 +11,7 @@ import { useAprobacionCalidad } from '../lib/useAprobacionCalidad';
 import { useRefresco } from '../lib/useRefresco';
 import { codigoMP, fechaCorta, fmt, mmss, num, signo } from '../lib/format';
 
-const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+const CARD = 'rounded-md bg-white dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
 
 // Detalle de insumos del lote: valores de cada etapa, con su unidad
 const unidad = (e) => e.unidad || 'kg';
@@ -187,7 +187,7 @@ export default function EtiquetaDigital() {
                 <span className={labelClass}>Inicio</span>
                 <span className="text-[22px] font-bold tabular-nums">
                   {lote.inicio ? (
-                    <Chip tipo="inicio" grande>{fechaCorta(lote.inicio)}</Chip>
+                    <Chip tipo="inicio" chico>{fechaCorta(lote.inicio)}</Chip>
                   ) : (
                     '—'
                   )}
@@ -196,7 +196,7 @@ export default function EtiquetaDigital() {
               <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">
                 <span className={labelClass}>Fin</span>
                 <span className="text-[22px] font-bold tabular-nums">
-                  {lote.fin ? <Chip tipo="fin" grande>{fechaCorta(lote.fin)}</Chip> : '—'}
+                  {lote.fin ? <Chip tipo="fin" chico>{fechaCorta(lote.fin)}</Chip> : '—'}
                 </span>
               </div>
               <div className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 lg:py-0">

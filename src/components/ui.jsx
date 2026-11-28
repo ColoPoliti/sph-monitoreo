@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AnimatedCounter from '../components/AnimatedCounter';
 // Colores, textos e íconos de los chips: en lib/estados.js (también los usan los modales de calidad)
-import { CHIP_ESTADO, CHIP_VARIANTS, estadoChip, etapaChip } from '../lib/estados';
+import { CHIP_CHICO, CHIP_ESTADO, CHIP_VARIANTS, estadoChip, etapaChip } from '../lib/estados';
 
 // grande: para datos destacados (ej.: fechas de la etiqueta digital)
 // icono (opcional): ícono de FontAwesome antes del texto. mayus: texto en mayúsculas (chips de estado)
@@ -10,6 +10,8 @@ import { CHIP_ESTADO, CHIP_VARIANTS, estadoChip, etapaChip } from '../lib/estado
 export function Chip({
   tipo = 'ok',
   grande = false,
+  chico = false,
+  chicoNotebook = false,
   icono,
   mayus = false,
   animado = false,
@@ -17,7 +19,15 @@ export function Chip({
   children,
 }) {
   // grande: alto total (31px) dentro del renglón de un texto de 22px, para no desalinear
-  const tam = grande ? 'px-2 text-[18px] font-bold leading-[29px] align-middle' :'px-2.5 py-[3px] text-[14px] font-semibold';
+  // chico: fechas de inicio/fin y estado del lote
+  const tam = grande
+    ? 'px-2 text-[18px] font-bold leading-[29px] align-middle'
+    : chico
+      ? CHIP_CHICO
+      : chicoNotebook
+        ? // chicoNotebook: tamaño chico solo en notebook (lg a 2xl); en celular, tablet y monitor grande, el normal
+          'px-2.5 py-[3px] text-[14px] font-semibold lg:px-2 lg:py-px lg:text-[12px] 2xl:px-2.5 2xl:py-[3px] 2xl:text-[14px]'
+        : 'px-2.5 py-[3px] text-[14px] font-semibold';
   return (
     <span
       className={`inline-block rounded-md border border-current ${tam} ${CHIP_VARIANTS[tipo]} ${
@@ -79,7 +89,7 @@ export function SwitchAprobar({ lote, onAprobar, deshabilitado = false, conTexto
 export function ChipEstado({ estado }) {
   const { tipo, texto, icono } = estadoChip(estado);
   return (
-    <Chip tipo={tipo} icono={icono} mayus>
+    <Chip tipo={tipo} icono={icono} mayus chico>
       {texto}
     </Chip>
   );
@@ -89,7 +99,7 @@ export function ChipEstado({ estado }) {
 export function ChipEtapa({ listo, curso }) {
   const { tipo, texto, icono, animado, iconoGira } = etapaChip({ listo, curso });
   return (
-    <Chip tipo={tipo} icono={icono} mayus animado={animado} iconoGira={iconoGira}>
+    <Chip tipo={tipo} icono={icono} mayus animado={animado} iconoGira={iconoGira} chicoNotebook>
       {texto}
     </Chip>
   );
@@ -98,14 +108,15 @@ export function ChipEtapa({ listo, curso }) {
 export function ProgressPill({ valor, listo }) {
   const ancho = Math.max(0, Math.min(100, valor || 0));
   return (
-    <div className="relative flex h-[22px] w-[104px] items-center justify-center overflow-hidden rounded-[5px] bg-gray-200 dark:bg-slate-800">
+    // En notebook (lg a 2xl) más angosta, para que la receta entre sin scroll
+    <div className="relative flex h-[22px] w-[104px] items-center justify-center overflow-hidden rounded-[5px] bg-gray-200 dark:bg-slate-800 lg:w-[72px] 2xl:w-[104px]">
       <div
         className={`absolute inset-y-0 left-0 rounded opacity-[.35] dark:opacity-[.55] ${
           listo ? 'bg-teal-600 dark:bg-teal-400' : 'bg-violet-600 dark:bg-violet-500'
         }`}
         style={{ width: `${ancho}%` }}
       />
-      <span className="relative text-[14px] font-bold"><AnimatedCounter value={ancho} decimals={0} /> %</span>
+      <span className="relative text-[14px] font-bold lg:text-[12px] 2xl:text-[14px]"><AnimatedCounter value={ancho} decimals={0} /> %</span>
     </div>
   );
 }

@@ -5,7 +5,7 @@ export const INPUT =
   'min-h-11 w-full rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-950 px-3 py-1.5 text-[15px] font-medium text-gray-900 dark:text-white';
 
 export const TH =
-  'px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300';
+  'px-1.5 py-2 text-[11px] font-bold uppercase tracking-[0.6px] text-gray-600 dark:text-slate-300';
 export const TD = 'px-1.5 py-2 align-middle text-[15px] font-medium';
 
 const BOTON_BASE =

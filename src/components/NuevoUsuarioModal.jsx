@@ -8,8 +8,9 @@ import { ROLES } from '../lib/auth';
 import { crearUsuario } from '../lib/usuarios';
 import { toastCalidad } from '../lib/alertasCalidad';
 
+// Compacto (min-h-10, gap-3) para que el modal entre sin scroll en una notebook
 const INPUT =
-  'min-h-11 w-full rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-950 px-3 py-1.5 text-[15px] font-medium text-gray-900 dark:text-white';
+  'min-h-10 w-full rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-950 px-3 py-1 text-[15px] font-medium text-gray-900 dark:text-white';
 
 // Mínimo de la contraseña (el servidor también lo controla)
 const MIN_CLAVE = 8;
@@ -28,7 +29,7 @@ export default function NuevoUsuarioModal({ abierto, onCerrar, onCreado }) {
 // Campo de contraseña con el ojo para mostrarla u ocultarla
 function CampoClave({ etiqueta, valor, onCambiar, ver, onVer }) {
   return (
-    <label className="flex flex-col gap-1.5">
+    <label className="flex flex-col gap-1">
       <span className={labelClass}>{etiqueta}</span>
       <div className="relative">
         <input
@@ -113,7 +114,7 @@ function Contenido({ onCerrar, onCreado }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={tituloId}
-        className="relative flex max-h-full w-full max-w-md flex-col gap-4 overflow-y-auto rounded-[14px] bg-white px-5 py-6 text-gray-900 shadow-2xl dark:bg-slate-900 dark:text-white sm:px-6"
+        className="relative flex max-h-full w-full max-w-md flex-col gap-3 overflow-y-auto rounded-[14px] bg-white px-5 py-5 text-gray-900 shadow-2xl dark:bg-slate-900 dark:text-white sm:px-6"
         initial={{ opacity: 0, scale: 0.95, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 12 }}
@@ -130,7 +131,7 @@ function Contenido({ onCerrar, onCreado }) {
         </button>
 
         <div className="flex items-center gap-3 pr-8">
-          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-gradient-to-br from-teal-600 to-violet-600 text-white">
+          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gradient-to-br from-teal-600 to-violet-600 text-white">
             <FontAwesomeIcon icon={faUserPlus} className="text-xl" aria-hidden="true" />
           </span>
           <div className="flex flex-col">
@@ -141,7 +142,7 @@ function Contenido({ onCerrar, onCreado }) {
           </div>
         </div>
 
-        <label className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1">
           <span className={labelClass}>Usuario</span>
           <input
             type="text"
@@ -157,7 +158,7 @@ function Contenido({ onCerrar, onCreado }) {
           />
         </label>
 
-        <label className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1">
           <span className={labelClass}>Nombre y apellido</span>
           <input
             type="text"
@@ -169,7 +170,7 @@ function Contenido({ onCerrar, onCreado }) {
           />
         </label>
 
-        <label className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1">
           <span className={labelClass}>Rol</span>
           <select className={`${INPUT} cursor-pointer`} value={form.rol} onChange={(e) => cambiar('rol')(e.target.value)}>
             <option value="usuario">{ROLES.usuario} · solo consulta</option>
@@ -196,7 +197,7 @@ function Contenido({ onCerrar, onCreado }) {
         <button
           type="submit"
           disabled={enviando}
-          className="min-h-11 cursor-pointer rounded-lg border-0 bg-gradient-to-r from-teal-600 to-violet-600 px-[26px] py-1.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:from-teal-700 hover:to-violet-700 disabled:cursor-wait disabled:opacity-60"
+          className="mt-1 min-h-10 cursor-pointer rounded-lg border-0 bg-gradient-to-r from-teal-600 to-violet-600 px-[26px] py-1.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:from-teal-700 hover:to-violet-700 disabled:cursor-wait disabled:opacity-60"
         >
           {enviando ? 'Creando…' : 'Crear usuario'}
         </button>

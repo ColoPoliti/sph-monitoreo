@@ -26,6 +26,10 @@ export const CHIP_VARIANTS = {
 // Clases base de un chip de tamaño normal
 export const CHIP_BASE = 'inline-block rounded-md border border-current px-2.5 py-[3px] text-[14px] font-semibold';
 
+// Tamaño chico: fechas de inicio/fin y estado del lote (tablas, etiqueta digital y modal de info)
+export const CHIP_CHICO = 'px-2 py-px text-[12px] font-semibold';
+export const CHIP_BASE_CHICO = `inline-block rounded-md border border-current ${CHIP_CHICO}`;
+
 // Chips de estado: en mayúsculas
 export const CHIP_ESTADO = 'uppercase tracking-[0.4px]';
 

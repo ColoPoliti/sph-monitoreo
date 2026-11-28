@@ -1,11 +1,11 @@
-// Tabla de datos común a todos los módulos: orden por columna, búsqueda, paginado y exportación a CSV.
+// Tabla de datos común a todos los módulos: orden por columna, búsqueda, paginado y exportación a Excel (.xlsx).
 //
 //   <DataTable
 //     titulo="Proveedores"
 //     filas={proveedores}
 //     clave={(p) => p.id}
 //     minWidth={820}
-//     exportar="proveedores.csv"
+//     exportar="proveedores.xlsx"
 //     columnas={[
 //       { id: 'nombre', titulo: 'Razón social', valor: (p) => p.razonSocial, clase: 'font-bold' },
 //       { id: 'total', titulo: 'Total', alinear: 'right', valor: (p) => p.total, celda: (p) => pesos(p.total) },
@@ -15,8 +15,8 @@
 //
 // Cada columna:
 //   id        identificador único
-//   titulo    texto del encabezado (y de la columna en el CSV)
-//   valor     (fila) => dato crudo: define el orden, la búsqueda y el CSV. Sin valor, la columna no se ordena ni se exporta.
+//   titulo    texto del encabezado (y de la columna en el Excel)
+//   valor     (fila) => dato crudo: define el orden, la búsqueda y el Excel. Sin valor, la columna no se ordena ni se exporta.
 //   celda     (fila, { orden }) => lo que se muestra; por defecto, el valor. `orden` es el orden activo ({ id, dir } o null).
 //   texto     (fila) => texto adicional para la búsqueda (ej.: la fecha como se ve en pantalla)
 //   alinear   'left' (por defecto) | 'right' | 'center'
@@ -34,10 +34,10 @@ import {
   faChevronLeft,
   faChevronRight,
   faChevronUp,
-  faFileCsv,
+  faFileExcel,
   faMagnifyingGlass,
 } from '@fortawesome/free-solid-svg-icons';
-import { descargarCSV } from '../lib/csv';
+import { descargarExcel } from '../lib/excel';
 import { BOTON, INPUT, TD, TH } from './clases';
 
 const TAMANOS = [10, 25, 50, 100];
@@ -150,7 +150,7 @@ export default function DataTable({
   };
 
   const descargar = () =>
-    descargarCSV(
+    descargarExcel(
       exportar,
       ordenadas,
       columnas.filter((c) => c.valor).map((c) => ({ titulo: c.titulo, valor: c.valor })),
@@ -186,7 +186,7 @@ export default function DataTable({
           )}
           {exportar && (
             <button type="button" className={`${BOTON.secundario} ml-auto`} onClick={descargar} disabled={!ordenadas.length}>
-              <FontAwesomeIcon icon={faFileCsv} aria-hidden="true" />
+              <FontAwesomeIcon icon={faFileExcel} aria-hidden="true" />
               Exportar
             </button>
           )}

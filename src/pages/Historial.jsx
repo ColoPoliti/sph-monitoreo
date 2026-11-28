@@ -16,7 +16,7 @@ import { hoyISO } from '../lib/format';
 import { useAprobacionCalidad } from '../lib/useAprobacionCalidad';
 import { useRefresco } from '../lib/useRefresco';
 
-const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+const CARD = 'rounded-md bg-white dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
 
 const inicial = () => ({
   sector: 'todos',
@@ -296,7 +296,7 @@ export default function Historial() {
           minWidth={esAdmin ? 880 : 720}
           onAprobar={esAdmin ? onAprobar : undefined}
           onInfo={esAdmin ? mostrarInfoLote : undefined}
-          exportar="historial-elaboraciones.csv"
+          exportar="historial-elaboraciones.xlsx"
         />
 
         <span

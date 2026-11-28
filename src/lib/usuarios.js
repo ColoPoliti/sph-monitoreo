@@ -36,3 +36,16 @@ export async function crearUsuario({ usuario, nombre, rol, clave }) {
 export async function bajaUsuario(usuario) {
   return conSesion(pedir('/usuarios.php?usuario=' + encodeURIComponent(usuario), { method: 'DELETE' }));
 }
+
+// PUT /api/usuarios.php?usuario=X con { activo: 1 } (reactivar) o { rol } (cambiar el rol).
+// El servidor no deja cambiarse el rol a uno mismo ni quitarle el rol al último superadmin (409).
+const modificarUsuario = (usuario, cambios) =>
+  conSesion(
+    pedir('/usuarios.php?usuario=' + encodeURIComponent(usuario), { method: 'PUT', cuerpo: cambios }),
+  );
+
+/** Vuelve a habilitar un usuario dado de baja (puede ingresar de nuevo, con su clave y su rol de antes). */
+export const reactivarUsuario = (usuario) => modificarUsuario(usuario, { activo: 1 });
+
+/** Cambia el rol: 'superadmin' | 'admin' | 'usuario'. */
+export const cambiarRolUsuario = (usuario, rol) => modificarUsuario(usuario, { rol });

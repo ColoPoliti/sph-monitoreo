@@ -9,10 +9,15 @@ export const signo = (n, d = 1) => (n > 0 ? '+' : '') + fmt(n, d);
 export const num = (v) =>
   v === null || v === undefined || v === '' ? null : Number(v);
 
-// segundos -> mm:ss
+// segundos -> mm:ss (menos de 1 hora) o "12 h 36 min" (1 hora o más, en lugar de "756:48")
 export const mmss = (s) => {
   if (s === null || s === undefined || !Number.isFinite(Number(s))) return '—';
   const t = Math.round(Number(s));
+  if (t >= 3600) {
+    const h = Math.floor(t / 3600);
+    const min = Math.floor((t % 3600) / 60);
+    return `${h} h ${String(min).padStart(2, '0')} min`;
+  }
   return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
 };
 

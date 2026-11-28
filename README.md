@@ -94,7 +94,7 @@ Perfiles:
 
 | Rol | Puede |
 | --- | --- |
-| `superadmin` | Todo lo del `admin`, y además crear, ver y dar de baja usuarios (menú de sesión → Usuarios) |
+| `superadmin` | Todo lo del `admin`, y además crear, ver, dar de baja, reactivar y cambiar el rol de usuarios (menú de sesión → Usuarios) |
 | `admin` | Aprobar, rechazar y quitar la decisión |
 | `usuario` | Solo consultar (switch deshabilitado) |
 | sin sesión | Ver monitor e historial, sin switch |
@@ -117,6 +117,8 @@ Endpoints que usa la web (todos bajo `/api`, respuestas JSON; en los errores
 | `GET /api/usuarios.php` | Lista de usuarios: `usuario, nombre, rol, activo, creado, creado_por, ultimo_acceso` (nunca `clave_hash`) | `src/lib/usuarios.js` |
 | `POST /api/usuarios.php` `{ usuario, nombre, rol, clave }` | Crear usuario (409 si ya existe) | `src/lib/usuarios.js` |
 | `DELETE /api/usuarios.php?usuario=X` | Baja lógica (`activo = 0`): no se borra, ya no puede ingresar | `src/lib/usuarios.js` |
+| `PUT /api/usuarios.php?usuario=X` `{ activo: 1 }` | Reactivar un usuario dado de baja (409 si ya está activo) | `src/lib/usuarios.js` |
+| `PUT /api/usuarios.php?usuario=X` `{ rol }` | Cambiar el rol (409 si es uno mismo, si está de baja o si es el último superadmin) | `src/lib/usuarios.js` |
 
 `usuarios.php` responde 403 si la sesión no es `superadmin`, no permite darse de baja a uno
 mismo ni al último superadmin, y guarda la clave con `password_hash()`. `login.php` y

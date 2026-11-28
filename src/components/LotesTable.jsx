@@ -9,7 +9,7 @@ import { Chip, ChipEstado, SwitchAprobar } from '../components/ui';
 
 // Fecha dentro de un badge; sin fecha (ej.: lote sin terminar) muestra un guion
 const BadgeFecha = ({ ts, tipo }) =>
-  ts ? <Chip tipo={tipo}>{fechaCorta(ts)}</Chip> : '—';
+  ts ? <Chip tipo={tipo} chico>{fechaCorta(ts)}</Chip> : '—';
 
 // onAprobar (opcional, vista Admin): agrega al final la columna "Aprobar" con un switch.
 // Se llama con (fila, encendido). onInfo (opcional): columna "Info" que abre los datos del lote.
@@ -54,10 +54,20 @@ export default function LotesTable({
     {
       id: 'codigo',
       titulo: 'Código de barras',
+      // En pantalla abreviado; el Excel y el "Ordenar por" siguen con el nombre completo
+      encabezado: 'Cód. barras',
       valor: (r) => r.codigo_barra,
       clase: 'codigo font-bold tabular-nums text-violet-700 dark:text-violet-300',
     },
-    { id: 'producto', titulo: 'Producto', valor: (r) => r.nombre_producto },
+    // Producto: letra más chica y centrado (también el guion cuando no hay nombre).
+    // "!" porque la celda ya trae text-[15px] (TD) y las dos clases son del mismo tipo.
+    {
+      id: 'producto',
+      titulo: 'Producto',
+      alinear: 'center',
+      valor: (r) => r.nombre_producto,
+      clase: '!text-[13px]',
+    },
     {
       id: 'inicio',
       titulo: 'Inicio',

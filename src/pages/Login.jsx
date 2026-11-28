@@ -10,7 +10,7 @@ export default function Login() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-gray-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 p-8 shadow-md dark:shadow-none">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-8 shadow-md dark:shadow-none">
         <h1 className="mb-6 text-2xl font-extrabold text-gray-900 dark:text-white">Acceso SPH</h1>
         <button
           type="button"

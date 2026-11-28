@@ -106,5 +106,34 @@ export async function respuestaDemo(path, method, cuerpo) {
     return { ok: true };
   }
 
+  // PUT ?usuario=X { activo: 1 } -> reactivar · { rol } -> cambiar el rol
+  if (method === 'PUT') {
+    const objetivo = usuarios.find((u) => u.usuario === params.get('usuario'));
+    if (!objetivo) falla(404, 'El usuario no existe');
+    const cambios = {};
+
+    if (cuerpo?.activo !== undefined) {
+      if (Number(cuerpo.activo) !== 1) falla(400, 'Para dar de baja usá la opción "Dar de baja"');
+      if (objetivo.activo) falla(409, 'El usuario ya está activo');
+      cambios.activo = true;
+    }
+
+    if (cuerpo?.rol !== undefined) {
+      if (!['superadmin', 'admin', 'usuario'].includes(cuerpo.rol)) falla(400, 'Rol inválido');
+      if (objetivo.usuario === yo.usuario) falla(409, 'No podés cambiar tu propio rol');
+      if (!objetivo.activo && !cambios.activo) falla(409, 'El usuario está dado de baja: reactivalo primero');
+      const superActivos = usuarios.filter((u) => u.rol === 'superadmin' && u.activo);
+      if (objetivo.rol === 'superadmin' && cuerpo.rol !== 'superadmin' && objetivo.activo && superActivos.length <= 1) {
+        falla(409, 'No se puede quitar el rol al último superadministrador');
+      }
+      cambios.rol = cuerpo.rol;
+    }
+
+    if (!Object.keys(cambios).length) falla(400, 'No hay cambios para guardar');
+    usuarios = usuarios.map((u) => (u === objetivo ? { ...u, ...cambios } : u));
+    guardar(K_USUARIOS, usuarios);
+    return { ok: true };
+  }
+
   falla(405, 'Método no permitido');
 }

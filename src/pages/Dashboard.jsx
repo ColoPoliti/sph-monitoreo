@@ -22,9 +22,15 @@ import { useRefresco } from '../lib/useRefresco';
 import { clamp, codigoMP, fmt, mmss, num } from '../lib/format';
 import { enEspera, enLinea, nombreEtapa, unidadEtapa } from '../lib/rooms';
 
-const CARD = 'rounded-md bg-white/70 dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
+const CARD = 'rounded-md bg-white dark:bg-slate-900/60 shadow-md dark:shadow-none px-4 py-[18px] sm:px-[22px]';
 // Rótulo de las barras de válvula y peso cargado
 const ROTULO_BARRA = 'whitespace-nowrap text-[11px] font-light uppercase tracking-[0.6px] text-gray-600 dark:text-slate-300';
+// Tabla de la receta. En notebook (lg a 2xl) letra y celdas más chicas para que entre sin scroll;
+// en celular, tablet y monitor grande (2xl) quedan como antes.
+const TH_RECETA =
+  'px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300 lg:px-1 lg:text-[11px] lg:tracking-[0.6px] 2xl:px-1.5 2xl:text-[13px] 2xl:tracking-[0.8px]';
+const TD_RECETA = 'px-1.5 py-2 lg:px-1 lg:py-1.5 2xl:px-1.5 2xl:py-2';
+const LETRA_RECETA = 'text-[15px] lg:text-[13px] 2xl:text-[15px]';
 
 export default function Dashboard() {
   const { selectedRoom: s, now, lotesVersion } = useMonitor();
@@ -148,19 +154,21 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <div className="flex flex-wrap items-stretch gap-6">
+      {/* En notebook (lg a 2xl): dos columnas fijas, etapa angosta (40 %) y receta ancha (60 %),
+          para que la receta quede al lado y entera. En monitor grande (2xl) vuelve al reparto flexible. */}
+      <div className="flex flex-wrap items-stretch gap-6 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] 2xl:flex">
         {/* Etapa y peso */}
         <section
           aria-label="Etapa y peso"
-          className={`${CARD} flex min-w-0 flex-1 basis-[520px] flex-wrap gap-x-6 gap-y-4`}
+          className={`${CARD} flex min-w-0 flex-1 basis-[520px] flex-wrap gap-x-6 gap-y-4 lg:gap-x-4 2xl:gap-x-6`}
         >
-          <div className="flex min-w-0 flex-1 basis-[280px] flex-col gap-2">
+          <div className="flex min-w-0 flex-1 basis-[280px] flex-col gap-2 lg:basis-[160px] 2xl:basis-[280px]">
             <span className={`${labelClass} flex items-center gap-2`}>
               <FontAwesomeIcon icon={faListOl} aria-hidden="true" />
               {enEtapa ? `Etapa ${s.etapa + 1} de ${s.area.etapas.length}` : 'Etapa'}
             </span>
             <span
-              className={`text-lg font-bold leading-[1.1] sm:text-[40px] ${
+              className={`text-lg font-bold leading-[1.1] sm:text-[40px] lg:text-[32px] 2xl:text-[40px] ${
                 on ? '' : 'text-slate-400 dark:text-slate-600' // "Sin datos" (PLC sin conexión)
               }`}
             >
@@ -170,10 +178,10 @@ export default function Dashboard() {
               <FontAwesomeIcon icon={faWeightScale} aria-hidden="true" />
               Peso de la balanza
             </span>
-            <span className="text-5xl font-bold leading-[1.05] tabular-nums sm:text-[76px]">
+            <span className="text-5xl font-bold leading-[1.05] tabular-nums sm:text-[76px] lg:text-[54px] 2xl:text-[76px]">
               <AnimatedCounter value={on ? s.peso : 0} /> {unidad}
             </span>
-            <span className="text-[22px] font-medium text-gray-600 dark:text-slate-300">
+            <span className="text-[22px] font-medium text-gray-600 dark:text-slate-300 lg:text-[17px] 2xl:text-[22px]">
               {on && s.sp > 0 ? (
                 <>
                   SP <AnimatedCounter value={s.sp} /> {unidad}
@@ -225,9 +233,10 @@ export default function Dashboard() {
               {/* Desde tablet, el tiempo queda a la altura del nombre de la etapa:
                   rótulo invisible igual al de la izquierda y fila del mismo alto que el nombre (40 px × 1,1) */}
               <span className={`${labelClass} hidden sm:invisible sm:block`} aria-hidden="true">Etapa</span>
-              <div className="flex items-center sm:h-[44px]">
-              {/* Mismo ancho que las dos barras: de su borde izquierdo al derecho */}
-              <div className="flex w-[168px] items-center justify-center rounded-lg border border-violet-500 bg-violet-100 px-2 py-1 shadow-sm backdrop-blur-md dark:border-white dark:bg-white/20 dark:shadow-none">
+              {/* Notebook: alto del nombre de etapa a 32 px (32 × 1,1 ≈ 35 px) */}
+              <div className="flex items-center sm:h-[44px] lg:h-[35px] 2xl:h-[44px]">
+              {/* Mismo ancho que las dos barras: de su borde izquierdo al derecho (notebook: barras más chicas) */}
+              <div className="flex w-[168px] lg:w-[124px] 2xl:w-[168px] items-center justify-center rounded-lg border border-violet-500 bg-violet-100 px-2 py-1 shadow-sm backdrop-blur-md dark:border-white dark:bg-white/20 dark:shadow-none">
                 <span
                   className={`flex items-center gap-1.5 whitespace-nowrap text-[15px] font-bold leading-tight tabular-nums ${
                     enEtapa ? 'text-violet-800 dark:text-white' : 'text-gray-700 dark:text-slate-200'
@@ -244,27 +253,27 @@ export default function Dashboard() {
             {/* Barras de válvula y peso cargado: desde tablet crecen y sus porcentajes quedan a la altura
                 del estado ("Dosificando"). Los 15 px de abajo son los que ocupa la barra de progreso. */}
             <div className="flex basis-full justify-center sm:flex-1 sm:basis-auto sm:pb-[15px]">
-            <div className="grid w-[216px] flex-none grid-cols-2 gap-2">
+            <div className="grid w-[216px] flex-none grid-cols-2 gap-2 lg:w-[152px] 2xl:w-[216px]">
             <div className="flex flex-col items-center gap-2">
               <span className={ROTULO_BARRA}>Válvula</span>
-              <div className="relative h-32 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-auto sm:min-h-[168px] sm:flex-1">
+              <div className="relative h-32 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-auto sm:min-h-[168px] sm:flex-1 lg:w-11 lg:min-h-[120px] 2xl:w-14 2xl:min-h-[168px]">
                 <div
                   className="absolute inset-x-0 bottom-0 rounded-md bg-violet-600 dark:bg-violet-500"
                   style={{ height: `${valv}%` }}
                 />
               </div>
-              <span className="text-base font-bold sm:text-xl sm:leading-5"><AnimatedCounter value={valv} decimals={0} /> %</span>
+              <span className="text-base font-bold sm:text-xl sm:leading-5 lg:text-base 2xl:text-xl"><AnimatedCounter value={valv} decimals={0} /> %</span>
             </div>
 
             <div className="flex flex-col items-center gap-2">
               <span className={ROTULO_BARRA}>Peso cargado</span>
-              <div className="relative h-32 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-auto sm:min-h-[168px] sm:flex-1">
+              <div className="relative h-32 w-14 overflow-hidden rounded-lg bg-gray-200 dark:bg-slate-800 sm:h-auto sm:min-h-[168px] sm:flex-1 lg:w-11 lg:min-h-[120px] 2xl:w-14 2xl:min-h-[168px]">
                 <div
                   className="absolute inset-x-0 bottom-0 rounded-md bg-teal-600 dark:bg-teal-400"
                   style={{ height: `${carg}%` }}
                 />
               </div>
-              <span className="text-base font-bold sm:text-xl sm:leading-5"><AnimatedCounter value={carg} decimals={0} /> %</span>
+              <span className="text-base font-bold sm:text-xl sm:leading-5 lg:text-base 2xl:text-xl"><AnimatedCounter value={carg} decimals={0} /> %</span>
             </div>
             </div>
             </div>
@@ -284,16 +293,17 @@ export default function Dashboard() {
           {/* La tabla solo se muestra cuando hay receta */}
           {r && (
             <div className="overflow-x-auto">
-              <table className="w-full" style={{ minWidth: 560 }}>
+              {/* Mínimo 560 px (con scroll) en celular y tablet; en notebook se ajusta al ancho de la card */}
+              <table className="w-full min-w-[560px] lg:min-w-0 2xl:min-w-[560px]">
                 <caption className="sr-only">Receta de la elaboración en curso</caption>
                 <thead>
                   <tr>
-                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Estado</th>
-                    <th scope="col" className="px-1.5 py-2 text-left text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Insumo</th>
-                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">SP</th>
-                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Cargado</th>
-                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Falta</th>
-                    <th scope="col" className="px-1.5 py-2 text-[13px] font-bold uppercase tracking-[0.8px] text-gray-600 dark:text-slate-300">Avance</th>
+                    <th scope="col" className={TH_RECETA}>Estado</th>
+                    <th scope="col" className={`${TH_RECETA} text-left`}>Insumo</th>
+                    <th scope="col" className={TH_RECETA}>SP</th>
+                    <th scope="col" className={TH_RECETA}>Cargado</th>
+                    <th scope="col" className={TH_RECETA}>Falta</th>
+                    <th scope="col" className={TH_RECETA}>Avance</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -326,20 +336,20 @@ export default function Dashboard() {
                         return (
                           <tr key={ins.etapa}>
                             {/* Pendiente: warning · Listo (finalizado): verde · En curso: índigo con borde */}
-                            <td className="whitespace-nowrap px-1.5 py-2">
+                            <td className={`whitespace-nowrap ${TD_RECETA}`}>
                               <ChipEtapa listo={listo} curso={curso} />
                             </td>
-                            <td className="px-1.5 py-2 text-[15px] font-medium">
+                            <td className={`${TD_RECETA} ${LETRA_RECETA} font-medium`}>
                               {String(ins.nombre || '').toUpperCase()}
                               <br />
-                              <span className="codigo text-[14px] text-gray-600 dark:text-slate-300">
+                              <span className="codigo text-[14px] text-gray-600 dark:text-slate-300 lg:text-[12px] 2xl:text-[14px]">
                                 {codigoMP(ins.codigo_mp)}
                               </span>
                             </td>
-                            <td className="whitespace-nowrap px-1.5 py-2 text-right text-[15px] font-medium tabular-nums">
+                            <td className={`whitespace-nowrap text-right font-medium tabular-nums ${TD_RECETA} ${LETRA_RECETA}`}>
                               {sp === null ? '—' : `${fmt(sp)} ${u}`}
                             </td>
-                            <td className="whitespace-nowrap px-1.5 py-2 text-right text-[15px] font-bold tabular-nums">
+                            <td className={`whitespace-nowrap text-right font-bold tabular-nums ${TD_RECETA} ${LETRA_RECETA}`}>
                               {cargado === null ? (
                                 '—'
                               ) : (
@@ -348,7 +358,7 @@ export default function Dashboard() {
                                 </>
                               )}
                             </td>
-                            <td className="whitespace-nowrap px-1.5 py-2 text-right text-[15px] font-medium tabular-nums">
+                            <td className={`whitespace-nowrap text-right font-medium tabular-nums ${TD_RECETA} ${LETRA_RECETA}`}>
                               {falta === null ? (
                                 '—'
                               ) : (
@@ -357,7 +367,7 @@ export default function Dashboard() {
                                 </>
                               )}
                             </td>
-                            <td className="px-1.5 py-2">
+                            <td className={TD_RECETA}>
                               <ProgressPill valor={avance} listo={listo} />
                             </td>
                           </tr>
